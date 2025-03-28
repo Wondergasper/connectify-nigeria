@@ -46,8 +46,6 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
         <BrowserRouter>
           <Suspense fallback={<Loading />}>
             <Routes>
@@ -70,6 +68,8 @@ const App = () => {
             </Routes>
           </Suspense>
         </BrowserRouter>
+        <Toaster />
+        <Sonner />
       </TooltipProvider>
     </QueryClientProvider>
   );
