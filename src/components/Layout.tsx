@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Outlet } from "react-router-dom";
 import BottomNavigation from "./BottomNavigation";
 import { useIsMobile } from "@/hooks/use-mobile";
