@@ -13,7 +13,7 @@ const BottomNavigation = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-10 dark-transition">
       <div className="flex justify-around py-3">
         <Link to="/" className={`nav-item ${isActive("/") ? "active" : ""}`}>
           <Home className="h-6 w-6" />

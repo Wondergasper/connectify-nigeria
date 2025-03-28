@@ -1,345 +1,384 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Download, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import Loading from "@/components/Loading";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from "recharts";
+import { CalendarDays, TrendingUp, TrendingDown, Users, Clock, CreditCard } from "lucide-react";
 
-// Mock analytics data
-const mockAnalytics = {
-  earnings: {
-    daily: [
-      { date: "2023-11-01", amount: 5000 },
-      { date: "2023-11-02", amount: 3500 },
-      { date: "2023-11-03", amount: 0 },
-      { date: "2023-11-04", amount: 7500 },
-      { date: "2023-11-05", amount: 4000 },
-      { date: "2023-11-06", amount: 8000 },
-      { date: "2023-11-07", amount: 0 }
-    ],
-    weekly: [
-      { week: "Oct 30 - Nov 5", amount: 20000 },
-      { week: "Nov 6 - Nov 12", amount: 28000 },
-      { week: "Nov 13 - Nov 19", amount: 18000 },
-      { week: "Nov 20 - Nov 26", amount: 32000 }
-    ],
-    monthly: [
-      { month: "Aug", amount: 75000 },
-      { month: "Sep", amount: 85000 },
-      { month: "Oct", amount: 95000 },
-      { month: "Nov", amount: 66000 }
-    ]
-  },
-  jobs: {
-    daily: [
-      { date: "2023-11-01", count: 2 },
-      { date: "2023-11-02", count: 1 },
-      { date: "2023-11-03", count: 0 },
-      { date: "2023-11-04", count: 3 },
-      { date: "2023-11-05", count: 1 },
-      { date: "2023-11-06", count: 2 },
-      { date: "2023-11-07", count: 0 }
-    ],
-    weekly: [
-      { week: "Oct 30 - Nov 5", count: 7 },
-      { week: "Nov 6 - Nov 12", count: 9 },
-      { week: "Nov 13 - Nov 19", count: 5 },
-      { week: "Nov 20 - Nov 26", count: 11 }
-    ],
-    monthly: [
-      { month: "Aug", count: 28 },
-      { month: "Sep", count: 32 },
-      { month: "Oct", count: 35 },
-      { month: "Nov", count: 24 }
-    ]
-  },
-  ratings: {
-    daily: [
-      { date: "2023-11-01", rating: 5.0 },
-      { date: "2023-11-02", rating: 4.0 },
-      { date: "2023-11-03", rating: 0 },
-      { date: "2023-11-04", rating: 4.7 },
-      { date: "2023-11-05", rating: 5.0 },
-      { date: "2023-11-06", rating: 4.5 },
-      { date: "2023-11-07", rating: 0 }
-    ],
-    weekly: [
-      { week: "Oct 30 - Nov 5", rating: 4.7 },
-      { week: "Nov 6 - Nov 12", rating: 4.8 },
-      { week: "Nov 13 - Nov 19", rating: 4.6 },
-      { week: "Nov 20 - Nov 26", rating: 4.9 }
-    ],
-    monthly: [
-      { month: "Aug", rating: 4.6 },
-      { month: "Sep", rating: 4.7 },
-      { month: "Oct", rating: 4.8 },
-      { month: "Nov", rating: 4.8 }
-    ]
-  }
-};
+const Analytics = () => {
+  // Sample data for charts
+  const bookingsData = [
+    { name: "Mon", bookings: 4 },
+    { name: "Tue", bookings: 3 },
+    { name: "Wed", bookings: 5 },
+    { name: "Thu", bookings: 7 },
+    { name: "Fri", bookings: 6 },
+    { name: "Sat", bookings: 10 },
+    { name: "Sun", bookings: 8 },
+  ];
 
-const ProviderAnalytics = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [timeRange, setTimeRange] = useState("weekly");
-  
-  useEffect(() => {
-    // Simulate API call
-    const timer = setTimeout(() => {
-      setAnalytics(mockAnalytics);
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+  const serviceTypeData = [
+    { name: "Plumbing", value: 35 },
+    { name: "Electrical", value: 25 },
+    { name: "Cleaning", value: 20 },
+    { name: "Painting", value: 15 },
+    { name: "Others", value: 5 },
+  ];
 
-  const getMaxValue = (data: any[], key: string) => {
-    return Math.max(...data.map(item => item[key]));
-  };
+  const revenueData = [
+    { month: "Jan", revenue: 4000 },
+    { month: "Feb", revenue: 5000 },
+    { month: "Mar", revenue: 3000 },
+    { month: "Apr", revenue: 7000 },
+    { month: "May", revenue: 6000 },
+    { month: "Jun", revenue: 8000 },
+  ];
 
-  if (loading) {
-    return <Loading />;
-  }
+  const ratingData = [
+    { name: "5 Stars", count: 48 },
+    { name: "4 Stars", count: 32 },
+    { name: "3 Stars", count: 12 },
+    { name: "2 Stars", count: 6 },
+    { name: "1 Star", count: 2 },
+  ];
+
+  const COLORS = ['#1EAEDB', '#0A4975', '#001F3F', '#888888', '#333333'];
+
+  // Calculate statistics
+  const totalBookings = bookingsData.reduce((sum, item) => sum + item.bookings, 0);
+  const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
+  const averageRating = (ratingData.reduce((sum, item) => sum + (item.name.charAt(0) * item.count), 0) / 
+                         ratingData.reduce((sum, item) => sum + item.count, 0)).toFixed(1);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            className="pl-0 mr-4" 
-            onClick={() => navigate("/provider-dashboard")}
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            Dashboard
-          </Button>
-          <h1 className="text-2xl font-bold text-connectify-darkGray">Analytics</h1>
-        </div>
-        
-        <div className="flex space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />
-                {timeRange === "daily" ? "Daily" : 
-                 timeRange === "weekly" ? "Weekly" : "Monthly"}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTimeRange("daily")}>
-                Daily
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTimeRange("weekly")}>
-                Weekly
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTimeRange("monthly")}>
-                Monthly
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <Button variant="outline" className="flex items-center">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
+    <div className="animate-fade-in space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-connectify-darkGray dark:text-connectify-blue">Analytics Dashboard</h1>
+        <p className="text-connectify-mediumGray mt-2">Track your performance metrics and growth</p>
       </div>
 
-      <Tabs defaultValue="earnings">
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="earnings">Earnings</TabsTrigger>
-          <TabsTrigger value="jobs">Job Count</TabsTrigger>
-          <TabsTrigger value="ratings">Ratings</TabsTrigger>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover-scale">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+            <CalendarDays className="h-4 w-4 text-connectify-blue" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalBookings}</div>
+            <p className="text-xs text-muted-foreground">+12% from last week</p>
+          </CardContent>
+        </Card>
+        <Card className="hover-scale">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CreditCard className="h-4 w-4 text-connectify-darkBlue" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₦{totalRevenue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">+18% from last month</p>
+          </CardContent>
+        </Card>
+        <Card className="hover-scale">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Client Rating</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{averageRating}/5.0</div>
+            <p className="text-xs text-muted-foreground">+0.2 from last month</p>
+          </CardContent>
+        </Card>
+        <Card className="hover-scale">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Response Time</CardTitle>
+            <Clock className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1.2 hours</div>
+            <p className="text-xs text-muted-foreground">-15 min from last week</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="bookings" className="space-y-4">
+        <TabsList className="grid grid-cols-3 lg:w-[400px]">
+          <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="earnings" className="space-y-6">
+        <TabsContent value="bookings" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Earnings Overview</CardTitle>
+              <CardTitle>Weekly Bookings</CardTitle>
+              <CardDescription>View your booking trends for the past week</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-end justify-between pt-6">
-                {analytics.earnings[timeRange].map((item: any, index: number) => {
-                  const maxAmount = getMaxValue(analytics.earnings[timeRange], "amount");
-                  const height = item.amount ? (item.amount / maxAmount) * 250 : 4;
-                  
-                  return (
-                    <div key={index} className="flex flex-col items-center">
-                      <div 
-                        className="bg-connectify-blue w-12 md:w-16 rounded-t-sm" 
-                        style={{ 
-                          height: `${height}px`,
-                          backgroundColor: item.amount === 0 ? '#e5e7eb' : undefined
-                        }}
-                      ></div>
-                      <span className="text-xs mt-2 text-center">
-                        {timeRange === "daily" ? item.date.split("-")[2] : 
-                         timeRange === "weekly" ? `W${index+1}` : item.month}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={bookingsData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="bookings" fill="#1EAEDB" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Total Earnings</p>
-                  <p className="text-xl font-bold">
-                    ₦
-                    {analytics.earnings[timeRange].reduce((sum: number, item: any) => sum + item.amount, 0).toLocaleString()}
-                  </p>
+            </CardContent>
+          </Card>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Ratings</CardTitle>
+                <CardDescription>Distribution of ratings from clients</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {ratingData.map((item, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{item.name}</span>
+                        <span className="text-sm text-muted-foreground">{item.count} reviews</span>
+                      </div>
+                      <Progress value={(item.count / ratingData.reduce((sum, i) => sum + i.count, 0)) * 100} />
+                    </div>
+                  ))}
                 </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Average</p>
-                  <p className="text-xl font-bold">
-                    ₦
-                    {Math.round(
-                      analytics.earnings[timeRange].reduce((sum: number, item: any) => sum + item.amount, 0) / 
-                      analytics.earnings[timeRange].filter((item: any) => item.amount > 0).length
-                    ).toLocaleString()}
-                  </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Your latest bookings and reviews</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="rounded-full bg-connectify-blue/20 p-2">
+                      <Users className="h-4 w-4 text-connectify-blue" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">New booking from Adebayo</p>
+                      <p className="text-xs text-muted-foreground">2 hours ago</p>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center gap-4">
+                    <div className="rounded-full bg-green-500/20 p-2">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">New 5-star review from Chioma</p>
+                      <p className="text-xs text-muted-foreground">5 hours ago</p>
+                    </div>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center gap-4">
+                    <div className="rounded-full bg-connectify-darkBlue/20 p-2">
+                      <CalendarDays className="h-4 w-4 text-connectify-darkBlue" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Completed service for Emeka</p>
+                      <p className="text-xs text-muted-foreground">Yesterday</p>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Highest</p>
-                  <p className="text-xl font-bold">
-                    ₦
-                    {Math.max(...analytics.earnings[timeRange].map((item: any) => item.amount)).toLocaleString()}
-                  </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="revenue" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Revenue</CardTitle>
+              <CardDescription>Your earnings over the last 6 months</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => [`₦${value.toLocaleString()}`, 'Revenue']} />
+                    <Legend />
+                    <Line type="monotone" dataKey="revenue" stroke="#0A4975" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Breakdown</CardTitle>
+              <CardDescription>Analysis of payment methods used</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="h-[200px] w-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Bank Transfer", value: 45 },
+                          { name: "Card Payment", value: 35 },
+                          { name: "Cash", value: 20 }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        paddingAngle={5}
+                        dataKey="value"
+                        label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        <Cell fill="#1EAEDB" />
+                        <Cell fill="#0A4975" />
+                        <Cell fill="#333333" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#1EAEDB]" />
+                    <span className="text-sm">Bank Transfer - 45%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#0A4975]" />
+                    <span className="text-sm">Card Payment - 35%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[#333333]" />
+                    <span className="text-sm">Cash - 20%</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="jobs" className="space-y-6">
+        <TabsContent value="services" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Job Count Overview</CardTitle>
+              <CardTitle>Service Type Breakdown</CardTitle>
+              <CardDescription>Distribution of your service categories</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-end justify-between pt-6">
-                {analytics.jobs[timeRange].map((item: any, index: number) => {
-                  const maxCount = getMaxValue(analytics.jobs[timeRange], "count");
-                  const height = item.count ? (item.count / maxCount) * 250 : 4;
-                  
-                  return (
-                    <div key={index} className="flex flex-col items-center">
-                      <div 
-                        className="bg-green-500 w-12 md:w-16 rounded-t-sm" 
-                        style={{ 
-                          height: `${height}px`,
-                          backgroundColor: item.count === 0 ? '#e5e7eb' : undefined
-                        }}
-                      ></div>
-                      <span className="text-xs mt-2 text-center">
-                        {timeRange === "daily" ? item.date.split("-")[2] : 
-                         timeRange === "weekly" ? `W${index+1}` : item.month}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Total Jobs</p>
-                  <p className="text-xl font-bold">
-                    {analytics.jobs[timeRange].reduce((sum: number, item: any) => sum + item.count, 0)}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Average</p>
-                  <p className="text-xl font-bold">
-                    {Math.round(
-                      analytics.jobs[timeRange].reduce((sum: number, item: any) => sum + item.count, 0) / 
-                      analytics.jobs[timeRange].length
-                    )}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Most Jobs</p>
-                  <p className="text-xl font-bold">
-                    {Math.max(...analytics.jobs[timeRange].map((item: any) => item.count))}
-                  </p>
-                </div>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={serviceTypeData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {serviceTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="ratings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Rating Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] flex items-end justify-between pt-6">
-                {analytics.ratings[timeRange].map((item: any, index: number) => {
-                  const height = item.rating ? (item.rating / 5) * 250 : 4;
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Popular Services</CardTitle>
+                <CardDescription>Your most requested services</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Pipe Repair</span>
+                    <span className="text-sm text-muted-foreground">42 bookings</span>
+                  </div>
+                  <Progress value={85} className="h-2" />
                   
-                  return (
-                    <div key={index} className="flex flex-col items-center">
-                      <div 
-                        className="bg-yellow-400 w-12 md:w-16 rounded-t-sm" 
-                        style={{ 
-                          height: `${height}px`,
-                          backgroundColor: item.rating === 0 ? '#e5e7eb' : undefined
-                        }}
-                      ></div>
-                      <span className="text-xs mt-2 text-center">
-                        {timeRange === "daily" ? item.date.split("-")[2] : 
-                         timeRange === "weekly" ? `W${index+1}` : item.month}
-                      </span>
-                      {item.rating > 0 && (
-                        <span className="text-xs mt-1 font-medium">{item.rating.toFixed(1)}</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Average Rating</p>
-                  <p className="text-xl font-bold">
-                    {(
-                      analytics.ratings[timeRange]
-                        .filter((item: any) => item.rating > 0)
-                        .reduce((sum: number, item: any) => sum + item.rating, 0) / 
-                      analytics.ratings[timeRange].filter((item: any) => item.rating > 0).length
-                    ).toFixed(1)}
-                  </p>
+                  <div className="flex justify-between items-center">
+                    <span>Water Heater Installation</span>
+                    <span className="text-sm text-muted-foreground">28 bookings</span>
+                  </div>
+                  <Progress value={65} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Leaky Faucet</span>
+                    <span className="text-sm text-muted-foreground">19 bookings</span>
+                  </div>
+                  <Progress value={45} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Drainage Issues</span>
+                    <span className="text-sm text-muted-foreground">15 bookings</span>
+                  </div>
+                  <Progress value={35} className="h-2" />
                 </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Highest Rating</p>
-                  <p className="text-xl font-bold">
-                    {Math.max(...analytics.ratings[timeRange].map((item: any) => item.rating)).toFixed(1)}
-                  </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Service Areas</CardTitle>
+                <CardDescription>Geographic distribution of your services</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Lagos Island</span>
+                    <span className="text-sm text-muted-foreground">35%</span>
+                  </div>
+                  <Progress value={35} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Ikeja</span>
+                    <span className="text-sm text-muted-foreground">25%</span>
+                  </div>
+                  <Progress value={25} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Lekki</span>
+                    <span className="text-sm text-muted-foreground">20%</span>
+                  </div>
+                  <Progress value={20} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Surulere</span>
+                    <span className="text-sm text-muted-foreground">15%</span>
+                  </div>
+                  <Progress value={15} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Yaba</span>
+                    <span className="text-sm text-muted-foreground">5%</span>
+                  </div>
+                  <Progress value={5} className="h-2" />
                 </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-connectify-mediumGray">Rated Jobs</p>
-                  <p className="text-xl font-bold">
-                    {analytics.ratings[timeRange].filter((item: any) => item.rating > 0).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 };
 
-export default ProviderAnalytics;
+export default Analytics;
