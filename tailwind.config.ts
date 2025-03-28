@@ -66,7 +66,8 @@ export default {
 				// Custom colors for our app
 				connectify: {
 					blue: '#1EAEDB',
-					darkBlue: '#0FA0CE',
+					darkBlue: '#0A4975', // Updated to a darker navy blue
+					navyBlue: '#001F3F', // Added navy blue
 					darkGray: '#333333',
 					lightGray: '#F6F6F7',
 					mediumGray: '#888888',
