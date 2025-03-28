@@ -4,13 +4,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
+import { UserProvider } from './contexts/UserContext';
 
 // Pages
 import Layout from "./components/Layout";
 import Loading from "./components/Loading";
 import NotFound from "./pages/NotFound";
+import UserTypeSelection from "./pages/UserTypeSelection";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Lazy loaded pages
 const Home = lazy(() => import("./pages/Home"));
@@ -47,30 +50,61 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <BrowserRouter>
-          <Suspense fallback={<Loading />}>
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="search" element={<SearchResults />} />
-                <Route path="provider/:id" element={<ProviderProfile />} />
-                <Route path="bookings" element={<Bookings />} />
-                <Route path="payment/:bookingId" element={<PaymentScreen />} />
-                <Route path="profile" element={<Profile />} />
+        <UserProvider>
+          <BrowserRouter>
+            <Suspense fallback={<Loading />}>
+              <Routes>
+                {/* User type selection route */}
+                <Route path="/select-user-type" element={<UserTypeSelection />} />
                 
-                {/* Provider routes */}
-                <Route path="provider-registration" element={<ProviderRegistration />} />
-                <Route path="provider-dashboard" element={<ProviderDashboard />} />
-                <Route path="provider-jobs" element={<ProviderJobs />} />
-                <Route path="provider-profile" element={<ProviderProfileManagement />} />
-                <Route path="provider-analytics" element={<ProviderAnalytics />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          <Toaster />
-          <Sonner />
-        </BrowserRouter>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="search" element={<SearchResults />} />
+                  <Route path="provider/:id" element={<ProviderProfile />} />
+                  
+                  {/* Customer routes */}
+                  <Route path="bookings" element={
+                    <ProtectedRoute allowedRole="customer">
+                      <Bookings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="payment/:bookingId" element={
+                    <ProtectedRoute allowedRole="customer">
+                      <PaymentScreen />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="profile" element={<Profile />} />
+                  
+                  {/* Provider routes */}
+                  <Route path="provider-registration" element={<ProviderRegistration />} />
+                  <Route path="provider-dashboard" element={
+                    <ProtectedRoute allowedRole="provider">
+                      <ProviderDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="provider-jobs" element={
+                    <ProtectedRoute allowedRole="provider">
+                      <ProviderJobs />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="provider-profile" element={
+                    <ProtectedRoute allowedRole="provider">
+                      <ProviderProfileManagement />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="provider-analytics" element={
+                    <ProtectedRoute allowedRole="provider">
+                      <ProviderAnalytics />
+                    </ProtectedRoute>
+                  } />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+            <Toaster />
+            <Sonner />
+          </BrowserRouter>
+        </UserProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

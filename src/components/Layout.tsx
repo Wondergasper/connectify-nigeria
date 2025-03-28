@@ -1,15 +1,42 @@
+
 import React from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import BottomNavigation from "./BottomNavigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "./ThemeToggle";
 import WhatsAppBanner from "./WhatsAppBanner";
-import { Menu, Home, Search, Calendar, User } from "lucide-react";
+import { Menu, Home, Search, Calendar, User, LogOut, Briefcase } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useUser } from "@/contexts/UserContext";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 const Layout = () => {
   const isMobile = useIsMobile();
+  const { userRole, setUserRole, setIsAuthenticated } = useUser();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    setUserRole(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("isAuthenticated");
+    
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out."
+    });
+    
+    navigate("/select-user-type");
+  };
+
+  const getUserTypeColor = () => {
+    if (userRole === "provider") return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
+    if (userRole === "customer") return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+    return "";
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground dark-transition">
@@ -25,24 +52,64 @@ const Layout = () => {
               </SheetTrigger>
               <SheetContent side="left" className="w-[250px] sm:w-[300px]">
                 <div className="py-6 space-y-6">
-                  <h2 className="text-lg font-medium">Connectify</h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-medium">Connectify</h2>
+                    {userRole && (
+                      <Badge variant="outline" className={getUserTypeColor()}>
+                        {userRole === "provider" ? "Provider" : "Customer"}
+                      </Badge>
+                    )}
+                  </div>
                   <nav className="flex flex-col space-y-3">
-                    <Link to="/" className="flex items-center py-2 text-sm hover:text-connectify-blue">
-                      <Home className="h-4 w-4 mr-2" />
-                      Home
-                    </Link>
-                    <Link to="/search" className="flex items-center py-2 text-sm hover:text-connectify-blue">
-                      <Search className="h-4 w-4 mr-2" />
-                      Search
-                    </Link>
-                    <Link to="/bookings" className="flex items-center py-2 text-sm hover:text-connectify-blue">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Bookings
-                    </Link>
-                    <Link to="/profile" className="flex items-center py-2 text-sm hover:text-connectify-blue">
-                      <User className="h-4 w-4 mr-2" />
-                      Profile
-                    </Link>
+                    {userRole === "provider" ? (
+                      // Provider navigation for desktop
+                      <>
+                        <Link to="/provider-dashboard" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <Home className="h-4 w-4 mr-2" />
+                          Dashboard
+                        </Link>
+                        <Link to="/provider-jobs" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          Jobs
+                        </Link>
+                        <Link to="/provider-analytics" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Analytics
+                        </Link>
+                        <Link to="/provider-profile" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </Link>
+                      </>
+                    ) : (
+                      // Customer navigation for desktop
+                      <>
+                        <Link to="/" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <Home className="h-4 w-4 mr-2" />
+                          Home
+                        </Link>
+                        <Link to="/search" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <Search className="h-4 w-4 mr-2" />
+                          Search
+                        </Link>
+                        <Link to="/bookings" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Bookings
+                        </Link>
+                        <Link to="/profile" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </Link>
+                      </>
+                    )}
+                    
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center py-2 text-sm text-red-500 hover:text-red-700"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </button>
                   </nav>
                 </div>
               </SheetContent>
@@ -53,12 +120,30 @@ const Layout = () => {
               Connectify
             </h1>
           </Link>
+          
+          {userRole && (
+            <Badge variant="outline" className={`${getUserTypeColor()} hidden sm:inline-flex`}>
+              {userRole === "provider" ? "Provider" : "Customer"}
+            </Badge>
+          )}
         </div>
-        <ThemeToggle />
+        
+        <div className="flex items-center space-x-2">
+          {!userRole && (
+            <Button
+              size="sm"
+              onClick={() => navigate("/select-user-type")}
+              className="bg-connectify-blue hover:bg-connectify-darkBlue"
+            >
+              Sign In
+            </Button>
+          )}
+          <ThemeToggle />
+        </div>
       </header>
       
       <main className="flex-1 container p-4 pb-24 md:pb-6 dark-transition animate-fade-in">
-        <WhatsAppBanner />
+        {userRole === "customer" && <WhatsAppBanner />}
         <Outlet />
       </main>
       
