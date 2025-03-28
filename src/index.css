@@ -46,7 +46,7 @@
   }
 
   .dark {
-    --background: 0 0% 0%; /* Black background */
+    --background: 0 0% 0%; /* Pure black background */
     --foreground: 210 40% 98%;
 
     --card: 0 0% 5%; /* Slightly lighter black for cards */
@@ -74,7 +74,7 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
     
-    --sidebar-background: 0 0% 5%;
+    --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -115,4 +115,23 @@
   .whatsapp-banner {
     @apply bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 p-3 rounded-lg text-sm font-medium flex items-center gap-2 mt-4;
   }
+}
+
+/* Dark mode transition effects */
+.dark-transition {
+  @apply transition-colors duration-300;
+}
+
+/* Enhanced text colors for dark mode */
+.dark .text-navy {
+  @apply text-connectify-blue;
+}
+
+.dark .bg-element {
+  @apply bg-black border border-gray-800;
+}
+
+/* Ensure content has proper contrast in dark mode */
+.dark .content-area {
+  @apply text-gray-100;
 }
