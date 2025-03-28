@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -6,7 +7,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000 // Changed from 1000000 to a more reasonable value
 
 type ToasterToast = ToastProps & {
   id: string
@@ -126,9 +127,12 @@ export const reducer = (state: State, action: Action): State => {
   }
 }
 
-const listeners: Array<(state: State) => void> = []
+// Initial state
+const initialState: State = { toasts: [] }
 
-let memoryState: State = { toasts: [] }
+// Create a global listeners array and memory state
+const listeners: Array<(state: State) => void> = []
+let memoryState: State = initialState
 
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
