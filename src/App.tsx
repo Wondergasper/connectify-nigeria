@@ -45,36 +45,34 @@ const App = () => {
   }, []);
 
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={0}>
-          <BrowserRouter>
-            <Suspense fallback={<Loading />}>
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<Home />} />
-                  <Route path="search" element={<SearchResults />} />
-                  <Route path="provider/:id" element={<ProviderProfile />} />
-                  <Route path="bookings" element={<Bookings />} />
-                  <Route path="payment/:bookingId" element={<PaymentScreen />} />
-                  <Route path="profile" element={<Profile />} />
-                  
-                  {/* Provider routes */}
-                  <Route path="provider-registration" element={<ProviderRegistration />} />
-                  <Route path="provider-dashboard" element={<ProviderDashboard />} />
-                  <Route path="provider-jobs" element={<ProviderJobs />} />
-                  <Route path="provider-profile" element={<ProviderProfileManagement />} />
-                  <Route path="provider-analytics" element={<ProviderAnalytics />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Home />} />
+                <Route path="search" element={<SearchResults />} />
+                <Route path="provider/:id" element={<ProviderProfile />} />
+                <Route path="bookings" element={<Bookings />} />
+                <Route path="payment/:bookingId" element={<PaymentScreen />} />
+                <Route path="profile" element={<Profile />} />
+                
+                {/* Provider routes */}
+                <Route path="provider-registration" element={<ProviderRegistration />} />
+                <Route path="provider-dashboard" element={<ProviderDashboard />} />
+                <Route path="provider-jobs" element={<ProviderJobs />} />
+                <Route path="provider-profile" element={<ProviderProfileManagement />} />
+                <Route path="provider-analytics" element={<ProviderAnalytics />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
           <Toaster />
           <Sonner />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

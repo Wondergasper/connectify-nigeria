@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -50,8 +49,11 @@ const Analytics = () => {
   // Calculate statistics
   const totalBookings = bookingsData.reduce((sum, item) => sum + item.bookings, 0);
   const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
-  const averageRating = (ratingData.reduce((sum, item) => sum + (item.name.charAt(0) * item.count), 0) / 
-                         ratingData.reduce((sum, item) => sum + item.count, 0)).toFixed(1);
+  
+  const averageRating = (ratingData.reduce((sum, item) => {
+    const rating = parseInt(item.name.charAt(0), 10);
+    return sum + (rating * item.count);
+  }, 0) / ratingData.reduce((sum, item) => sum + item.count, 0)).toFixed(1);
 
   return (
     <div className="animate-fade-in space-y-8">
