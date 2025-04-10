@@ -9,8 +9,8 @@ import os
 # Initialize Flask app
 app = Flask(__name__)
 
-# Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://user:wonder@localhost:5432/app_db')
+# Configuration for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'  # SQLite database file in the same directory
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-here')  # Change in production
 db = SQLAlchemy(app)
@@ -283,7 +283,7 @@ def update_booking_status(booking_id):
     user_id = get_jwt_identity()
     booking = Booking.query.get_or_404(booking_id)
     provider = Provider.query.filter_by(user_id=user_id).first()
-    if not provider or booking(provider_id != provider.id):
+    if not provider or booking.provider_id != provider.id:
         return jsonify({'message': 'Unauthorized'}), 403
     data = request.get_json()
     new_status = data.get('status')
@@ -338,7 +338,7 @@ def post_review(provider_id):
     # Update provider rating
     provider = Provider.query.get(provider_id)
     reviews = provider.reviews
-    provider.rating = sum(r.rating for r in reviews) / len(reviews)
+    provider.rating = sum(r.rating for r in reviews) / len(reviews) if reviews else 0.0
     db.session.commit()
     return jsonify({'message': 'Review posted'}), 201
 
