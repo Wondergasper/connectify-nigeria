@@ -6,28 +6,25 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 
-# Initialize Flask app
 app = Flask(__name__)
-
-# Configuration for SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'  # SQLite database file in the same directory
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-here')  # Change in production
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key')
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-CORS(app)  # Enable CORS for frontend on different domain
+CORS(app)
 
 # Database Models
 class User(db.Model):
-    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(20))
     location = db.Column(db.String(100))
-    role = db.Column(db.String(20), default='customer')  # 'customer' or 'provider'
+    role = db.Column(db.String(20), default='customer')
     notifications = db.Column(db.Boolean, default=True)
     password_hash = db.Column(db.String(128), nullable=False)
+    paymentMethods = db.Column(db.JSON)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -36,69 +33,50 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Provider(db.Model):
-    __tablename__ = 'providers'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     photo = db.Column(db.String(200))
     rating = db.Column(db.Float, default=0.0)
-    price = db.Column(db.String(50))  # e.g., "₦2,500/hr"
+    price = db.Column(db.String(50))
     category = db.Column(db.String(100))
     location = db.Column(db.String(100))
     bio = db.Column(db.Text)
-    services = db.Column(db.JSON)  # List of services offered
-    availability = db.Column(db.JSON)  # Availability slots
-    user = db.relationship('User', backref='provider', uselist=False)
+    services = db.Column(db.JSON)
+    availability = db.Column(db.JSON)
+    reviews = db.Column(db.JSON)
 
 class Booking(db.Model):
-    __tablename__ = 'bookings'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    provider_id = db.Column(db.Integer, db.ForeignKey('providers.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    provider_id = db.Column(db.Integer, db.ForeignKey('provider.id'), nullable=False)
     service = db.Column(db.String(100), nullable=False)
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
     location = db.Column(db.String(200), nullable=False)
     notes = db.Column(db.Text)
-    status = db.Column(db.String(20), default='pending')  # 'pending', 'confirmed', 'completed', 'cancelled'
+    status = db.Column(db.String(20), default='pending')
     cost = db.Column(db.Numeric(10, 2))
     is_paid = db.Column(db.Boolean, default=False)
-    user = db.relationship('User', backref='bookings')
-    provider = db.relationship('Provider', backref='bookings')
 
 class Payment(db.Model):
-    __tablename__ = 'payments'
     id = db.Column(db.Integer, primary_key=True)
-    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=False)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
-    method = db.Column(db.String(20))  # 'card', 'bank', 'mobile'
-    details = db.Column(db.JSON)  # Payment details (tokenized by gateway)
-    status = db.Column(db.String(20), default='pending')  # 'pending', 'success', 'failed'
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    booking = db.relationship('Booking', backref='payment', uselist=False)
+    method = db.Column(db.String(20))
+    details = db.Column(db.JSON)
+    status = db.Column(db.String(20), default='pending')
 
 class Service(db.Model):
-    __tablename__ = 'services'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    category = db.Column(db.String(100))
 
 class Notification(db.Model):
-    __tablename__ = 'notifications'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    user = db.relationship('User', backref='notifications')
-
-class Review(db.Model):
-    __tablename__ = 'reviews'
-    id = db.Column(db.Integer, primary_key=True)
-    provider_id = db.Column(db.Integer, db.ForeignKey('providers.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    rating = db.Column(db.Integer, nullable=False)  # 1-5
-    comment = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    provider = db.relationship('Provider', backref='reviews')
-    user = db.relationship('User', backref='reviews')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Authentication Endpoints
 @app.route('/api/auth/login', methods=['POST'])
@@ -117,7 +95,6 @@ def login():
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
-    # JWT is stateless; client should discard token
     return jsonify({'message': 'Logged out'}), 200
 
 @app.route('/api/auth/me', methods=['GET'])
@@ -126,11 +103,29 @@ def get_current_user():
     user_id = get_jwt_identity()
     user = User.query.get_or_404(user_id)
     return jsonify({
-        'id': user.id, 'name': user.name, 'email': user.email, 'phone': user.phone,
-        'location': user.location, 'role': user.role, 'notifications': user.notifications
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'phone': user.phone,
+        'location': user.location,
+        'role': user.role,
+        'notifications': user.notifications
     }), 200
 
-# User Endpoints
+# User Management Endpoints
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_user(user_id):
+    user = User.query.get_or_404(user_id)
+    return jsonify({
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'phone': user.phone,
+        'location': user.location,
+        'role': user.role
+    }), 200
+
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def update_user(user_id):
@@ -145,8 +140,12 @@ def update_user(user_id):
     user.location = data.get('location', user.location)
     db.session.commit()
     return jsonify({
-        'id': user.id, 'name': user.name, 'email': user.email, 'phone': user.phone,
-        'location': user.location, 'role': user.role
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'phone': user.phone,
+        'location': user.location,
+        'role': user.role
     }), 200
 
 @app.route('/api/users/<int:user_id>/role', methods=['POST'])
@@ -161,6 +160,9 @@ def update_role(user_id):
     if new_role not in ['customer', 'provider']:
         return jsonify({'message': 'Invalid role'}), 400
     user.role = new_role
+    if new_role == 'provider' and not Provider.query.filter_by(user_id=user_id).first():
+        provider = Provider(user_id=user_id)
+        db.session.add(provider)
     db.session.commit()
     return jsonify({'id': user.id, 'role': user.role}), 200
 
@@ -176,73 +178,69 @@ def toggle_notifications(user_id):
     db.session.commit()
     return jsonify({'id': user.id, 'notifications': user.notifications}), 200
 
-# Provider Endpoints
-@app.route('/api/providers', methods=['GET'])
-def list_providers():
-    query = Provider.query.join(User)
-    if search := request.args.get('q'):
-        query = query.filter(db.or_(User.name.ilike(f'%{search}%'), Provider.category.ilike(f'%{search}%')))
-    if category := request.args.get('category'):
-        query = query.filter(Provider.category == category)
-    if location := request.args.get('location'):
-        query = query.filter(Provider.location == location)
-    if sort := request.args.get('sort'):
-        if sort == 'rating':
-            query = query.order_by(Provider.rating.desc())
-    providers = query.all()
-    return jsonify([{
-        'id': p.id, 'name': p.user.name, 'photo': p.photo, 'rating': p.rating,
-        'price': p.price, 'category': p.category, 'location': p.location
-    } for p in providers]), 200
-
+# Provider Management Endpoints
 @app.route('/api/providers/<int:provider_id>', methods=['GET'])
 def get_provider(provider_id):
     provider = Provider.query.get_or_404(provider_id)
-    reviews = [{
-        'id': r.id, 'user': r.user.name, 'rating': r.rating, 'comment': r.comment,
-        'date': r.created_at.strftime('%Y-%m-%d')
-    } for r in provider.reviews]
+    user = User.query.get(provider.user_id)
     return jsonify({
-        'id': provider.id, 'name': provider.user.name, 'photo': provider.photo,
-        'rating': provider.rating, 'price': provider.price, 'category': provider.category,
-        'location': provider.location, 'bio': provider.bio, 'services': provider.services,
-        'availability': provider.availability, 'reviews': reviews
+        'id': provider.id,
+        'name': user.name,
+        'photo': provider.photo,
+        'rating': provider.rating,
+        'price': provider.price,
+        'category': provider.category,
+        'location': provider.location,
+        'bio': provider.bio,
+        'services': provider.services,
+        'availability': provider.availability
     }), 200
 
-@app.route('/api/providers', methods=['POST'])
+@app.route('/api/providers/<int:provider_id>', methods=['PUT'])
 @jwt_required()
-def create_provider():
-    user_id = get_jwt_identity()
-    user = User.query.get_or_404(user_id)
-    if user.role != 'provider':
-        return jsonify({'message': 'Only providers can create profiles'}), 403
-    if Provider.query.filter_by(user_id=user_id).first():
-        return jsonify({'message': 'Provider profile already exists'}), 400
+def update_provider(provider_id):
+    provider = Provider.query.get_or_404(provider_id)
+    user = User.query.get(provider.user_id)
+    if user.id != get_jwt_identity():
+        return jsonify({'message': 'Unauthorized'}), 403
     data = request.get_json()
-    provider = Provider(
-        user_id=user_id, photo=data.get('photo'), category=data.get('category'),
-        location=data.get('location'), bio=data.get('bio'), services=data.get('services'),
-        availability=data.get('availability'), price=data.get('price')
-    )
-    db.session.add(provider)
+    provider.photo = data.get('photo', provider.photo)
+    provider.rating = data.get('rating', provider.rating)
+    provider.price = data.get('price', provider.price)
+    provider.category = data.get('category', provider.category)
+    provider.location = data.get('location', provider.location)
+    provider.bio = data.get('bio', provider.bio)
+    provider.services = data.get('services', provider.services)
+    provider.availability = data.get('availability', provider.availability)
     db.session.commit()
-    return jsonify({'id': provider.id, 'message': 'Provider profile created'}), 201
+    return jsonify({'id': provider.id, 'message': 'Profile updated'}), 200
 
-# Service Endpoints
-@app.route('/api/services', methods=['GET'])
-def list_services():
-    services = Service.query.all()
-    return jsonify([{'id': s.id, 'name': s.name} for s in services]), 200
-
-@app.route('/api/services/<string:category>/providers', methods=['GET'])
-def list_providers_by_category(category):
-    providers = Provider.query.filter_by(category=category).all()
+# Booking Management Endpoints
+@app.route('/api/bookings', methods=['GET'])
+@jwt_required()
+def list_bookings():
+    user_id = get_jwt_identity()
+    status = request.args.get('status', 'all')
+    query = Booking.query.filter_by(user_id=user_id)
+    if status == 'upcoming':
+        query = query.filter(Booking.status.in_(['pending', 'confirmed']))
+    elif status == 'completed':
+        query = query.filter(Booking.status == 'completed')
+    bookings = query.all()
     return jsonify([{
-        'id': p.id, 'name': p.user.name, 'photo': p.photo, 'rating': p.rating,
-        'price': p.price, 'location': p.location
-    } for p in providers]), 200
+        'id': b.id,
+        'providerId': b.provider_id,
+        'providerName': Provider.query.get(b.provider_id).user.name,
+        'providerPhoto': Provider.query.get(b.provider_id).photo,
+        'service': b.service,
+        'date': b.date.strftime('%Y-%m-%d'),
+        'time': b.time.strftime('%H:%M'),
+        'location': b.location,
+        'status': b.status,
+        'cost': str(b.cost),
+        'isPaid': b.is_paid
+    } for b in bookings]), 200
 
-# Booking Endpoints
 @app.route('/api/bookings', methods=['POST'])
 @jwt_required()
 def create_booking():
@@ -250,40 +248,47 @@ def create_booking():
     data = request.get_json()
     provider = Provider.query.get_or_404(data.get('providerId'))
     booking = Booking(
-        user_id=user_id, provider_id=provider.id, service=data.get('service'),
+        user_id=user_id,
+        provider_id=provider.id,
+        service=data.get('service'),
         date=datetime.strptime(data.get('date'), '%Y-%m-%d').date(),
         time=datetime.strptime(data.get('time'), '%H:%M').time(),
-        location=data.get('location'), notes=data.get('notes'), cost=0.00  # Placeholder
+        location=data.get('location'),
+        notes=data.get('notes'),
+        cost=0.00  # Placeholder
     )
     db.session.add(booking)
     db.session.commit()
+    # Send notification to provider
+    notification = Notification(user_id=provider.user_id, message=f"New booking from {User.query.get(user_id).name}")
+    db.session.add(notification)
+    db.session.commit()
     return jsonify({'id': booking.id, 'message': 'Booking created'}), 201
 
-@app.route('/api/bookings', methods=['GET'])
+@app.route('/api/bookings/<int:booking_id>', methods=['GET'])
 @jwt_required()
-def list_bookings():
-    user_id = get_jwt_identity()
-    query = Booking.query.filter_by(user_id=user_id)
-    if status := request.args.get('status'):
-        if status == 'upcoming':
-            query = query.filter(Booking.status.in_(['pending', 'confirmed']))
-        elif status == 'completed':
-            query = query.filter(Booking.status == 'completed')
-    bookings = query.all()
-    return jsonify([{
-        'id': b.id, 'providerId': b.provider_id, 'providerName': b.provider.user.name,
-        'providerPhoto': b.provider.photo, 'service': b.service, 'date': b.date.strftime('%Y-%m-%d'),
-        'time': b.time.strftime('%H:%M'), 'location': b.location, 'status': b.status,
-        'cost': str(b.cost), 'isPaid': b.is_paid
-    } for b in bookings]), 200
+def get_booking(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    return jsonify({
+        'id': booking.id,
+        'providerId': booking.provider_id,
+        'providerName': Provider.query.get(booking.provider_id).user.name,
+        'providerPhoto': Provider.query.get(booking.provider_id).photo,
+        'service': booking.service,
+        'date': booking.date.strftime('%Y-%m-%d'),
+        'time': booking.time.strftime('%H:%M'),
+        'location': booking.location,
+        'status': booking.status,
+        'cost': str(booking.cost),
+        'isPaid': booking.is_paid
+    }), 200
 
 @app.route('/api/bookings/<int:booking_id>/status', methods=['PUT'])
 @jwt_required()
 def update_booking_status(booking_id):
-    user_id = get_jwt_identity()
     booking = Booking.query.get_or_404(booking_id)
-    provider = Provider.query.filter_by(user_id=user_id).first()
-    if not provider or booking.provider_id != provider.id:
+    provider = Provider.query.get(booking.provider_id)
+    if provider.user_id != get_jwt_identity():
         return jsonify({'message': 'Unauthorized'}), 403
     data = request.get_json()
     new_status = data.get('status')
@@ -291,59 +296,105 @@ def update_booking_status(booking_id):
         return jsonify({'message': 'Invalid status'}), 400
     booking.status = new_status
     db.session.commit()
+    # Send notification to customer
+    notification = Notification(user_id=booking.user_id, message=f"Your booking status has been updated to {new_status}")
+    db.session.add(notification)
+    db.session.commit()
     return jsonify({'id': booking.id, 'status': booking.status}), 200
 
-# Payment Endpoints (Placeholder for Gateway Integration)
+# Services Management Endpoints
+@app.route('/api/services', methods=['GET'])
+def list_services():
+    services = Service.query.all()
+    return jsonify([{
+        'id': s.id,
+        'name': s.name,
+        'description': s.description,
+        'category': s.category
+    } for s in services]), 200
+
+# Payments Management Endpoints
 @app.route('/api/payments', methods=['POST'])
 @jwt_required()
 def process_payment():
     data = request.get_json()
     booking = Booking.query.get_or_404(data.get('bookingId'))
-    # Placeholder: Integrate with Paystack/Flutterwave here
     payment = Payment(
-        booking_id=booking.id, amount=booking.cost or 100.00, method=data.get('method'),
-        details=data.get('details'), status='success'  # Simulate success
+        booking_id=booking.id,
+        amount=booking.cost or 100.00,
+        method=data.get('method'),
+        details=data.get('details'),
+        status='success'  # Simulate success
     )
     db.session.add(payment)
     booking.is_paid = True
     db.session.commit()
     return jsonify({'paymentId': payment.id, 'status': payment.status}), 200
 
-# Notification Endpoint (Placeholder for WhatsApp Integration)
+@app.route('/api/payments/<int:payment_id>', methods=['GET'])
+@jwt_required()
+def get_payment(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    return jsonify({
+        'id': payment.id,
+        'bookingId': payment.booking_id,
+        'amount': str(payment.amount),
+        'method': payment.method,
+        'status': payment.status
+    }), 200
+
+# Notification Endpoints
 @app.route('/api/notifications', methods=['POST'])
 @jwt_required()
 def send_notification():
     data = request.get_json()
-    user = User.query.get_or_404(data.get('userId'))
-    if not user.notifications:
-        return jsonify({'message': 'Notifications disabled for user'}), 400
-    notification = Notification(user_id=user.id, message=data.get('message'))
+    user_id = data.get('userId')
+    message = data.get('message')
+    notification = Notification(user_id=user_id, message=message)
     db.session.add(notification)
     db.session.commit()
-    # Placeholder: Integrate with Twilio/WhatsApp API
     return jsonify({'notificationId': notification.id, 'message': notification.message}), 200
 
-# Review Endpoint
-@app.route('/api/providers/<int:provider_id>/reviews', methods=['POST'])
-@jwt_required()
-def post_review(provider_id):
-    user_id = get_jwt_identity()
-    data = request.get_json()
-    booking = Booking.query.filter_by(user_id=user_id, provider_id=provider_id, status='completed').first()
-    if not booking:
-        return jsonify({'message': 'No completed booking found'}), 403
-    review = Review(provider_id=provider_id, user_id=user_id, rating=data.get('rating'), comment=data.get('comment'))
-    db.session.add(review)
-    db.session.commit()
-    # Update provider rating
-    provider = Provider.query.get(provider_id)
-    reviews = provider.reviews
-    provider.rating = sum(r.rating for r in reviews) / len(reviews) if reviews else 0.0
-    db.session.commit()
-    return jsonify({'message': 'Review posted'}), 201
-
-# Initialize Database and Run App
-if __name__ == '__main__':
+# Seed Dummy Data
+def seed_dummy_data():
     with app.app_context():
-        db.create_all()  # Create tables if they don’t exist
+        db.drop_all()
+        db.create_all()
+        
+        user1 = User(name="Chidi Okonkwo", email="chidi@example.com", phone="+234123456789", location="Lagos, Nigeria")
+        user1.set_password("password123")
+        user2 = User(name="Provider User", email="provider@example.com", phone="+234987654321", location="Abuja, Nigeria", role="provider")
+        user2.set_password("password123")
+        
+        provider1 = Provider(
+            user_id=2,
+            photo="https://randomuser.me/api/portraits/men/1.jpg",
+            rating=4.8,
+            price="₦2,500/hr",
+            category="Plumbing",
+            location="Lagos",
+            bio="Professional plumber with over 10 years of experience.",
+            services=["Pipe Installation", "Drain Cleaning"],
+            availability=[{"day": "Monday", "hours": "9AM - 5PM"}]
+        )
+        
+        service1 = Service(name="Plumbing", description="Plumbing services", category="Home Services")
+        
+        booking1 = Booking(
+            user_id=1,
+            provider_id=1,
+            service="Pipe Installation",
+            date=datetime.strptime("2023-11-15", '%Y-%m-%d').date(),
+            time=datetime.strptime("14:00", '%H:%M').time(),
+            location="123 Lagos Street",
+            notes="I need a new pipe installed.",
+            cost=5000.00
+        )
+        
+        db.session.add_all([user1, user2, provider1, service1, booking1])
+        db.session.commit()
+        print("Dummy data seeded successfully!")
+
+if __name__ == '__main__':
+    seed_dummy_data()
     app.run(debug=True)
