@@ -18,6 +18,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Home from "./pages/Home"; // Direct import instead of lazy loading
 import Profile from "./pages/Profile"; // Direct import instead of lazy loading
+import Onboarding from "./pages/Onboarding"; // Direct import for onboarding page
 
 // Lazy loaded pages
 const SearchResults = lazy(() => import("./pages/SearchResults"));
@@ -56,8 +57,11 @@ const App = () => {
           <BrowserRouter>
             <Suspense fallback={<Loading />}>
               <Routes>
-                {/* User type selection route */}
+                {/* Onboarding and Auth Routes */}
+                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/select-user-type" element={<UserTypeSelection />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
                 
                 <Route path="/" element={<Layout />}>
                   <Route index element={<Home />} />
@@ -100,6 +104,8 @@ const App = () => {
                     </ProtectedRoute>
                   } />
                 </Route>
+                {/* Redirect root to onboarding for new users */}
+                <Route path="/" element={<Navigate to="/onboarding" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

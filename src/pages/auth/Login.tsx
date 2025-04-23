@@ -15,6 +15,7 @@ import {
 import AuthCard from "@/components/auth/AuthCard";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
+import { LogIn } from "lucide-react";
 
 interface LoginFormData {
   email: string;
@@ -25,7 +26,12 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { setUserRole, setIsAuthenticated } = useUser();
-  const form = useForm<LoginFormData>();
+  const form = useForm<LoginFormData>({
+    defaultValues: {
+      email: "",
+      password: ""
+    }
+  });
 
   const onSubmit = (data: LoginFormData) => {
     // For demo purposes, we're using basic validation
@@ -89,6 +95,7 @@ const Login = () => {
               )}
             />
             <Button type="submit" className="w-full bg-connectify-blue hover:bg-connectify-darkBlue">
+              <LogIn className="mr-2 h-4 w-4" />
               Sign In
             </Button>
           </form>

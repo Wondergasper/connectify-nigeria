@@ -22,6 +22,7 @@ import {
 import AuthCard from "@/components/auth/AuthCard";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
+import { UserPlus } from "lucide-react";
 
 interface SignupFormData {
   name: string;
@@ -34,7 +35,14 @@ const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { setUserRole, setIsAuthenticated } = useUser();
-  const form = useForm<SignupFormData>();
+  const form = useForm<SignupFormData>({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      userType: "customer"
+    }
+  });
 
   const onSubmit = (data: SignupFormData) => {
     setIsAuthenticated(true);
@@ -131,6 +139,7 @@ const Signup = () => {
               )}
             />
             <Button type="submit" className="w-full bg-connectify-blue hover:bg-connectify-darkBlue">
+              <UserPlus className="mr-2 h-4 w-4" />
               Create Account
             </Button>
           </form>

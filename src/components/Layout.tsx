@@ -5,7 +5,7 @@ import BottomNavigation from "./BottomNavigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "./ThemeToggle";
 import WhatsAppBanner from "./WhatsAppBanner";
-import { Menu, Home, Search, Calendar, User, LogOut, Briefcase } from "lucide-react";
+import { Menu, Home, Search, Calendar, User, LogOut, Briefcase, LogIn, UserPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useUser } from "@/contexts/UserContext";
@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Layout = () => {
   const isMobile = useIsMobile();
-  const { userRole, setUserRole, setIsAuthenticated } = useUser();
+  const { userRole, isAuthenticated, setUserRole, setIsAuthenticated } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -29,7 +29,7 @@ const Layout = () => {
       description: "You have been successfully logged out."
     });
     
-    navigate("/select-user-type");
+    navigate("/onboarding");
   };
 
   const getUserTypeColor = () => {
@@ -103,13 +103,26 @@ const Layout = () => {
                       </>
                     )}
                     
-                    <button 
-                      onClick={handleLogout}
-                      className="flex items-center py-2 text-sm text-red-500 hover:text-red-700"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </button>
+                    {isAuthenticated ? (
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center py-2 text-sm text-red-500 hover:text-red-700"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </button>
+                    ) : (
+                      <>
+                        <Link to="/login" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <LogIn className="h-4 w-4 mr-2" />
+                          Login
+                        </Link>
+                        <Link to="/signup" className="flex items-center py-2 text-sm hover:text-connectify-blue">
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
                   </nav>
                 </div>
               </SheetContent>
@@ -129,13 +142,35 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-2">
-          {!userRole && (
+          {!isAuthenticated ? (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate("/login")}
+                className="hidden sm:flex"
+              >
+                <LogIn className="mr-1 h-4 w-4" />
+                Login
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate("/signup")}
+                className="bg-connectify-blue hover:bg-connectify-darkBlue"
+              >
+                <UserPlus className="mr-1 h-4 w-4" />
+                <span className="hidden sm:inline">Sign Up</span>
+              </Button>
+            </div>
+          ) : (
             <Button
               size="sm"
-              onClick={() => navigate("/select-user-type")}
-              className="bg-connectify-blue hover:bg-connectify-darkBlue"
+              variant="ghost"
+              onClick={handleLogout}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 hidden sm:flex"
             >
-              Sign In
+              <LogOut className="mr-1 h-4 w-4" />
+              Logout
             </Button>
           )}
           <ThemeToggle />
