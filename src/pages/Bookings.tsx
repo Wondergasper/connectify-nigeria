@@ -5,78 +5,102 @@ import { Calendar, Clock, User, MapPin, CheckCircle, XCircle, Clock3, ArrowRight
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Loading from "@/components/Loading";
+import axios from "axios"
 
 // Mock booking data
-const mockBookings = [
-  {
-    id: "1",
-    providerId: "1",
-    providerName: "John Okafor",
-    providerPhoto: "https://randomuser.me/api/portraits/men/1.jpg",
-    service: "Pipe Installation and Repair",
-    date: "2023-11-15",
-    time: "14:00",
-    location: "123 Lagos Street, Victoria Island",
-    status: "completed",
-    cost: "₦5,000",
-    isPaid: false
-  },
-  {
-    id: "2",
-    providerId: "2",
-    providerName: "Amina Ibrahim",
-    providerPhoto: "https://randomuser.me/api/portraits/women/2.jpg",
-    service: "Home Cleaning",
-    date: "2023-11-20",
-    time: "10:00",
-    location: "45 Abuja Road, Wuse Zone 4",
-    status: "pending",
-    cost: "₦8,000",
-    isPaid: false
-  },
-  {
-    id: "3",
-    providerId: "3",
-    providerName: "Emmanuel Nwachukwu",
-    providerPhoto: "https://randomuser.me/api/portraits/men/3.jpg",
-    service: "Furniture Assembly",
-    date: "2023-11-12",
-    time: "11:30",
-    location: "78 Port Harcourt Avenue",
-    status: "confirmed",
-    cost: "₦12,000",
-    isPaid: false
-  },
-  {
-    id: "4",
-    providerId: "4",
-    providerName: "Chioma Eze",
-    providerPhoto: "https://randomuser.me/api/portraits/women/4.jpg",
-    service: "Dress Tailoring",
-    date: "2023-10-30",
-    time: "15:00",
-    location: "34 Enugu Street",
-    status: "completed",
-    cost: "₦7,500",
-    isPaid: true
-  }
-];
+// const mockBookings = [
+//   {
+//     id: "1",
+//     providerId: "1",
+//     providerName: "John Okafor",
+//     providerPhoto: "https://randomuser.me/api/portraits/men/1.jpg",
+//     service: "Pipe Installation and Repair",
+//     date: "2023-11-15",
+//     time: "14:00",
+//     location: "123 Lagos Street, Victoria Island",
+//     status: "completed",
+//     cost: "₦5,000",
+//     isPaid: false
+//   },
+//   {
+//     id: "2",
+//     providerId: "2",
+//     providerName: "Amina Ibrahim",
+//     providerPhoto: "https://randomuser.me/api/portraits/women/2.jpg",
+//     service: "Home Cleaning",
+//     date: "2023-11-20",
+//     time: "10:00",
+//     location: "45 Abuja Road, Wuse Zone 4",
+//     status: "pending",
+//     cost: "₦8,000",
+//     isPaid: false
+//   },
+//   {
+//     id: "3",
+//     providerId: "3",
+//     providerName: "Emmanuel Nwachukwu",
+//     providerPhoto: "https://randomuser.me/api/portraits/men/3.jpg",
+//     service: "Furniture Assembly",
+//     date: "2023-11-12",
+//     time: "11:30",
+//     location: "78 Port Harcourt Avenue",
+//     status: "confirmed",
+//     cost: "₦12,000",
+//     isPaid: false
+//   },
+//   {
+//     id: "4",
+//     providerId: "4",
+//     providerName: "Chioma Eze",
+//     providerPhoto: "https://randomuser.me/api/portraits/women/4.jpg",
+//     service: "Dress Tailoring",
+//     date: "2023-10-30",
+//     time: "15:00",
+//     location: "34 Enugu Street",
+//     status: "completed",
+//     cost: "₦7,500",
+//     isPaid: true
+//   }
+// ];
 
 const Bookings = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<any[]>([]);
-  
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     // Simulate API call
-    const timer = setTimeout(() => {
-      setBookings(mockBookings);
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchBookings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
 
+        const response = await axios.get("http://localhost:5000/api/bookings", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            status: "all",
+          },
+        });
+
+        setBookings(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch bookings. Please try again.");
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+
+    return () => {
+      // Cleanup not needed for axios, but kept for consistency
+    };
+  }, []);
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
@@ -117,6 +141,20 @@ const Bookings = () => {
 
   if (loading) {
     return <Loading />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 bg-white rounded-lg shadow">
+        <p className="text-connectify-darkGray">{error}</p>
+        <Button
+          onClick={() => window.location.reload()}
+          className="mt-4 bg-connectify-blue hover:bg-connectify-darkBlue"
+        >
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   return (
