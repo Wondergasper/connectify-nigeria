@@ -17,6 +17,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Home from "./pages/Home"; // Direct import instead of lazy loading
+import Profile from "./pages/Profile"; // Direct import instead of lazy loading
 
 // Lazy loaded pages
 const SearchResults = lazy(() => import("./pages/SearchResults"));
@@ -28,7 +29,6 @@ const ProviderJobs = lazy(() => import("./pages/provider/Jobs"));
 const ProviderProfileManagement = lazy(() => import("./pages/provider/Profile"));
 const ProviderAnalytics = lazy(() => import("./pages/provider/Analytics"));
 const ProviderRegistration = lazy(() => import("./pages/provider/Registration"));
-const Profile = lazy(() => import("./pages/Profile"));
 
 const queryClient = new QueryClient();
 
