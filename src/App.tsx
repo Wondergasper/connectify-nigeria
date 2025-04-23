@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,9 +16,9 @@ import UserTypeSelection from "./pages/UserTypeSelection";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import Home from "./pages/Home"; // Direct import instead of lazy loading
 
 // Lazy loaded pages
-const Home = lazy(() => import("./pages/Home"));
 const SearchResults = lazy(() => import("./pages/SearchResults"));
 const ProviderProfile = lazy(() => import("./pages/ProviderProfile"));
 const Bookings = lazy(() => import("./pages/Bookings"));
