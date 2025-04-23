@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -14,6 +13,8 @@ import Loading from "./components/Loading";
 import NotFound from "./pages/NotFound";
 import UserTypeSelection from "./pages/UserTypeSelection";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 
 // Lazy loaded pages
 const Home = lazy(() => import("./pages/Home"));
