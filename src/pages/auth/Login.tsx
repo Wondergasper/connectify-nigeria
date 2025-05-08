@@ -148,17 +148,11 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        localStorage.setItem('token', result.token);
-        setIsAuthenticated(true);
-        setUserRole(result.user.role);
+      const response = await api.post(endpoints.auth.login, data);
+      const result = response.data;
+      localStorage.setItem('token', result.token);
+      setIsAuthenticated(true);
+      setUserRole(result.user.role);
         toast({
           title: "Welcome back!",
           description: "You've successfully logged in.",

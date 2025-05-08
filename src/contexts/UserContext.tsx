@@ -18,16 +18,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Check localStorage on initial load
   useEffect(() => {
-    const savedRole = localStorage.getItem("userRole") as UserRole;
-    const authStatus = localStorage.getItem("isAuthenticated") === "true";
-    
-    if (savedRole) {
-      setUserRole(savedRole);
-    }
-    
-    if (authStatus) {
-      setIsAuthenticated(true);
-    }
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const response = await api.get(endpoints.auth.me);
+          setUserRole(response.data.role);
+          setIsAuthenticated(true);
+        } catch (error) {
+          localStorage.removeItem("token");
+          setIsAuthenticated(false);
+          setUserRole(null);
+        }
+      }
+    };
+    checkAuth();
   }, []);
 
   // Save to localStorage when values change

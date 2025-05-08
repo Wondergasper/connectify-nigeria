@@ -1,7 +1,7 @@
 
 export const API_BASE_URL = import.meta.env.PROD 
   ? 'https://your-repl-url.replit.dev/api'
-  : 'http://localhost:5000/api';
+  : 'http://0.0.0.0:5000/api';
 
 export const endpoints = {
   auth: {

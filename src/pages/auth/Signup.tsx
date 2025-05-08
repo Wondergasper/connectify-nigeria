@@ -44,16 +44,28 @@ const Signup = () => {
     }
   });
 
-  const onSubmit = (data: SignupFormData) => {
-    setIsAuthenticated(true);
-    setUserRole(data.userType);
-    
-    toast({
-      title: "Account created!",
-      description: "Welcome to Connectify.",
-    });
+  const onSubmit = async (data: SignupFormData) => {
+    try {
+      const response = await api.post(endpoints.auth.signup, data);
+      const result = response.data;
+      
+      localStorage.setItem('token', result.token);
+      setIsAuthenticated(true);
+      setUserRole(result.user.role);
+      
+      toast({
+        title: "Account created!",
+        description: "Welcome to Connectify.",
+      });
 
-    navigate(data.userType === "provider" ? "/provider-dashboard" : "/");
+      navigate(data.userType === "provider" ? "/provider-dashboard" : "/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create account",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
