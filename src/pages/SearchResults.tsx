@@ -229,7 +229,17 @@ import axios from "axios";
 const SearchResults = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
-  const [providers, setProviders] = useState<any[]>([]);
+  interface Provider {
+  id: string;
+  name: string;
+  photo: string;
+  rating: number;
+  price: string;
+  category: string;
+  location: string;
+}
+
+const [providers, setProviders] = useState<Provider[]>([]);
   const [sortBy, setSortBy] = useState("rating");
   const [locationFilter, setLocationFilter] = useState("");
   const [error, setError] = useState<string | null>(null);
