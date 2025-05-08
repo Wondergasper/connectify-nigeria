@@ -9,16 +9,19 @@ import os
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key')
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY',
+                                              'your-secret-key')
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["http://localhost:5173", "https://*.replit.dev"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+CORS(app,
+     resources={
+         r"/api/*": {
+             "origins": ["http://localhost:5173", "https://*.replit.dev"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization"]
+         }
+     })
+
 
 # Database Models
 class User(db.Model):
@@ -38,6 +41,7 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+
 class Provider(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -51,10 +55,13 @@ class Provider(db.Model):
     availability = db.Column(db.JSON)
     reviews = db.Column(db.JSON)
 
+
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    provider_id = db.Column(db.Integer, db.ForeignKey('provider.id'), nullable=False)
+    provider_id = db.Column(db.Integer,
+                            db.ForeignKey('provider.id'),
+                            nullable=False)
     service = db.Column(db.String(100), nullable=False)
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
@@ -64,13 +71,17 @@ class Booking(db.Model):
     cost = db.Column(db.Numeric(10, 2))
     is_paid = db.Column(db.Boolean, default=False)
 
+
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=False)
+    booking_id = db.Column(db.Integer,
+                           db.ForeignKey('booking.id'),
+                           nullable=False)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     method = db.Column(db.String(20))
     details = db.Column(db.JSON)
     status = db.Column(db.String(20), default='pending')
+
 
 class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,11 +89,13 @@ class Service(db.Model):
     description = db.Column(db.Text)
     category = db.Column(db.String(100))
 
+
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 # Authentication Endpoints
 @app.route('/api/auth/login', methods=['POST'])
@@ -95,13 +108,20 @@ def login():
         access_token = create_access_token(identity=user.id)
         return jsonify({
             'token': access_token,
-            'user': {'id': user.id, 'name': user.name, 'email': user.email, 'role': user.role}
+            'user': {
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'role': user.role
+            }
         }), 200
     return jsonify({'message': 'Invalid credentials'}), 401
+
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
     return jsonify({'message': 'Logged out'}), 200
+
 
 @app.route('/api/auth/me', methods=['GET'])
 @jwt_required()
@@ -118,6 +138,7 @@ def get_current_user():
         'notifications': user.notifications
     }), 200
 
+
 # User Management Endpoints
 @app.route('/api/users/<int:user_id>', methods=['GET'])
 @jwt_required()
@@ -131,6 +152,7 @@ def get_user(user_id):
         'location': user.location,
         'role': user.role
     }), 200
+
 
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 @jwt_required()
@@ -154,6 +176,7 @@ def update_user(user_id):
         'role': user.role
     }), 200
 
+
 @app.route('/api/users/<int:user_id>/role', methods=['POST'])
 @jwt_required()
 def update_role(user_id):
@@ -166,11 +189,13 @@ def update_role(user_id):
     if new_role not in ['customer', 'provider']:
         return jsonify({'message': 'Invalid role'}), 400
     user.role = new_role
-    if new_role == 'provider' and not Provider.query.filter_by(user_id=user_id).first():
+    if new_role == 'provider' and not Provider.query.filter_by(
+            user_id=user_id).first():
         provider = Provider(user_id=user_id)
         db.session.add(provider)
     db.session.commit()
     return jsonify({'id': user.id, 'role': user.role}), 200
+
 
 @app.route('/api/users/<int:user_id>/notifications', methods=['PUT'])
 @jwt_required()
@@ -183,6 +208,7 @@ def toggle_notifications(user_id):
     user.notifications = data.get('notifications', user.notifications)
     db.session.commit()
     return jsonify({'id': user.id, 'notifications': user.notifications}), 200
+
 
 # Provider Management Endpoints
 @app.route('/api/providers/<int:provider_id>', methods=['GET'])
@@ -202,6 +228,7 @@ def get_provider(provider_id):
         'availability': provider.availability
     }), 200
 
+
 @app.route('/api/providers/<int:provider_id>', methods=['PUT'])
 @jwt_required()
 def update_provider(provider_id):
@@ -220,6 +247,7 @@ def update_provider(provider_id):
     provider.availability = data.get('availability', provider.availability)
     db.session.commit()
     return jsonify({'id': provider.id, 'message': 'Profile updated'}), 200
+
 
 # Booking Management Endpoints
 @app.route('/api/bookings', methods=['GET'])
@@ -247,6 +275,7 @@ def list_bookings():
         'isPaid': b.is_paid
     } for b in bookings]), 200
 
+
 @app.route('/api/bookings', methods=['POST'])
 @jwt_required()
 def create_booking():
@@ -266,28 +295,43 @@ def create_booking():
     db.session.add(booking)
     db.session.commit()
     # Send notification to provider
-    notification = Notification(user_id=provider.user_id, message=f"New booking from {User.query.get(user_id).name}")
+    notification = Notification(
+        user_id=provider.user_id,
+        message=f"New booking from {User.query.get(user_id).name}")
     db.session.add(notification)
     db.session.commit()
     return jsonify({'id': booking.id, 'message': 'Booking created'}), 201
+
 
 @app.route('/api/bookings/<int:booking_id>', methods=['GET'])
 @jwt_required()
 def get_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     return jsonify({
-        'id': booking.id,
-        'providerId': booking.provider_id,
-        'providerName': Provider.query.get(booking.provider_id).user.name,
-        'providerPhoto': Provider.query.get(booking.provider_id).photo,
-        'service': booking.service,
-        'date': booking.date.strftime('%Y-%m-%d'),
-        'time': booking.time.strftime('%H:%M'),
-        'location': booking.location,
-        'status': booking.status,
-        'cost': str(booking.cost),
-        'isPaid': booking.is_paid
+        'id':
+        booking.id,
+        'providerId':
+        booking.provider_id,
+        'providerName':
+        Provider.query.get(booking.provider_id).user.name,
+        'providerPhoto':
+        Provider.query.get(booking.provider_id).photo,
+        'service':
+        booking.service,
+        'date':
+        booking.date.strftime('%Y-%m-%d'),
+        'time':
+        booking.time.strftime('%H:%M'),
+        'location':
+        booking.location,
+        'status':
+        booking.status,
+        'cost':
+        str(booking.cost),
+        'isPaid':
+        booking.is_paid
     }), 200
+
 
 @app.route('/api/bookings/<int:booking_id>/status', methods=['PUT'])
 @jwt_required()
@@ -303,10 +347,13 @@ def update_booking_status(booking_id):
     booking.status = new_status
     db.session.commit()
     # Send notification to customer
-    notification = Notification(user_id=booking.user_id, message=f"Your booking status has been updated to {new_status}")
+    notification = Notification(
+        user_id=booking.user_id,
+        message=f"Your booking status has been updated to {new_status}")
     db.session.add(notification)
     db.session.commit()
     return jsonify({'id': booking.id, 'status': booking.status}), 200
+
 
 # Services Management Endpoints
 @app.route('/api/services', methods=['GET'])
@@ -318,6 +365,7 @@ def list_services():
         'description': s.description,
         'category': s.category
     } for s in services]), 200
+
 
 # Payments Management Endpoints
 @app.route('/api/payments', methods=['POST'])
@@ -337,6 +385,7 @@ def process_payment():
     db.session.commit()
     return jsonify({'paymentId': payment.id, 'status': payment.status}), 200
 
+
 @app.route('/api/payments/<int:payment_id>', methods=['GET'])
 @jwt_required()
 def get_payment(payment_id):
@@ -349,6 +398,7 @@ def get_payment(payment_id):
         'status': payment.status
     }), 200
 
+
 # Notification Endpoints
 @app.route('/api/notifications', methods=['POST'])
 @jwt_required()
@@ -359,19 +409,30 @@ def send_notification():
     notification = Notification(user_id=user_id, message=message)
     db.session.add(notification)
     db.session.commit()
-    return jsonify({'notificationId': notification.id, 'message': notification.message}), 200
+    return jsonify({
+        'notificationId': notification.id,
+        'message': notification.message
+    }), 200
+
 
 # Seed Dummy Data
 def seed_dummy_data():
     with app.app_context():
         db.drop_all()
         db.create_all()
-        
-        user1 = User(name="Chidi Okonkwo", email="chidi@example.com", phone="+234123456789", location="Lagos, Nigeria")
+
+        user1 = User(name="Chidi Okonkwo",
+                     email="chidi@example.com",
+                     phone="+234123456789",
+                     location="Lagos, Nigeria")
         user1.set_password("password123")
-        user2 = User(name="Provider User", email="provider@example.com", phone="+234987654321", location="Abuja, Nigeria", role="provider")
+        user2 = User(name="Provider User",
+                     email="provider@example.com",
+                     phone="+234987654321",
+                     location="Abuja, Nigeria",
+                     role="provider")
         user2.set_password("password123")
-        
+
         provider1 = Provider(
             user_id=2,
             photo="https://randomuser.me/api/portraits/men/1.jpg",
@@ -381,25 +442,29 @@ def seed_dummy_data():
             location="Lagos",
             bio="Professional plumber with over 10 years of experience.",
             services=["Pipe Installation", "Drain Cleaning"],
-            availability=[{"day": "Monday", "hours": "9AM - 5PM"}]
-        )
-        
-        service1 = Service(name="Plumbing", description="Plumbing services", category="Home Services")
-        
-        booking1 = Booking(
-            user_id=1,
-            provider_id=1,
-            service="Pipe Installation",
-            date=datetime.strptime("2023-11-15", '%Y-%m-%d').date(),
-            time=datetime.strptime("14:00", '%H:%M').time(),
-            location="123 Lagos Street",
-            notes="I need a new pipe installed.",
-            cost=5000.00
-        )
-        
+            availability=[{
+                "day": "Monday",
+                "hours": "9AM - 5PM"
+            }])
+
+        service1 = Service(name="Plumbing",
+                           description="Plumbing services",
+                           category="Home Services")
+
+        booking1 = Booking(user_id=1,
+                           provider_id=1,
+                           service="Pipe Installation",
+                           date=datetime.strptime("2023-11-15",
+                                                  '%Y-%m-%d').date(),
+                           time=datetime.strptime("14:00", '%H:%M').time(),
+                           location="123 Lagos Street",
+                           notes="I need a new pipe installed.",
+                           cost=5000.00)
+
         db.session.add_all([user1, user2, provider1, service1, booking1])
         db.session.commit()
         print("Dummy data seeded successfully!")
+
 
 if __name__ == '__main__':
     seed_dummy_data()

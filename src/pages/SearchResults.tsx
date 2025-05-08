@@ -211,40 +211,265 @@
 
 // export default SearchResults;
 
+// import { useState, useEffect } from "react";
+// import { useLocation } from "react-router-dom";
+// import SearchBar from "@/components/SearchBar";
+// import ProviderCard from "@/components/ProviderCard";
+// import Loading from "@/components/Loading";
+// import { Filter, ArrowUpDown, MapPin, Star } from "lucide-react";
+// import { 
+//   DropdownMenu, 
+//   DropdownMenuContent, 
+//   DropdownMenuItem, 
+//   DropdownMenuTrigger 
+// } from "@/components/ui/dropdown-menu";
+// import { Button } from "@/components/ui/button";
+// import axios from "axios";
+
+// const SearchResults = () => {
+//   const location = useLocation();
+//   const [isLoading, setIsLoading] = useState(true);
+//   interface Provider {
+//   id: string;
+//   name: string;
+//   photo: string;
+//   rating: number;
+//   price: string;
+//   category: string;
+//   location: string;
+// }
+
+// const [providers, setProviders] = useState<Provider[]>([]);
+//   const [sortBy, setSortBy] = useState("rating");
+//   const [locationFilter, setLocationFilter] = useState("");
+//   const [error, setError] = useState<string | null>(null);
+
+//   // Get search params
+//   const queryParams = new URLSearchParams(location.search);
+//   const searchQuery = queryParams.get("q");
+//   const category = queryParams.get("category");
+
+//   useEffect(() => {
+//     const fetchProviders = async () => {
+//       setIsLoading(true);
+//       setError(null);
+//       try {
+//         const params = new URLSearchParams();
+//         if (searchQuery) params.append("q", searchQuery);
+//         if (category) params.append("category", category);
+//         if (locationFilter) params.append("location", locationFilter);
+//         if (sortBy) params.append("sort", sortBy);
+
+//         const response = await axios.get(`http://localhost:5000/api/providers?${params.toString()}`);
+//         setProviders(response.data);
+//       } catch (err) {
+//         if (axios.isAxiosError(err) && err.response) {
+//           setError(err.response.data.message || "Failed to fetch providers. Please try again.");
+//         } else {
+//           setError("An unexpected error occurred. Please try again.");
+//         }
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchProviders();
+//   }, [searchQuery, category, locationFilter, sortBy]);
+
+//   if (isLoading) {
+//     return <Loading />;
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="text-center py-12">
+//         <p className="text-connectify-darkGray">{error}</p>
+//         <Button onClick={() => window.location.reload()} className="mt-4 bg-connectify-blue hover:bg-connectify-darkBlue">
+//           Retry
+//         </Button>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="space-y-6 animate-fade-in">
+//       <SearchBar />
+      
+//       <div className="flex justify-between items-center">
+//         <h2 className="text-xl font-semibold text-connectify-darkGray">
+//           {searchQuery ? `Results for "${searchQuery}"` : 
+//           category ? `${category} Services` : "All Providers"}
+//         </h2>
+//         <div className="flex space-x-2">
+//           <DropdownMenu>
+//             <DropdownMenuTrigger asChild>
+//               <Button variant="outline" size="sm" className="flex items-center">
+//                 <Filter className="h-4 w-4 mr-1" /> Filter
+//               </Button>
+//             </DropdownMenuTrigger>
+//             <DropdownMenuContent align="end">
+//               <DropdownMenuItem onClick={() => setLocationFilter("Lagos")}>
+//                 <MapPin className="h-4 w-4 mr-2" /> Lagos
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={() => setLocationFilter("Abuja")}>
+//                 <MapPin className="h-4 w-4 mr-2" /> Abuja
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={() => setLocationFilter("Port Harcourt")}>
+//                 <MapPin className="h-4 w-4 mr-2" /> Port Harcourt
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={() => setLocationFilter("")}>
+//                 Clear Filter
+//               </DropdownMenuItem>
+//             </DropdownMenuContent>
+//           </DropdownMenu>
+          
+//           <DropdownMenu>
+//             <DropdownMenuTrigger asChild>
+//               <Button variant="outline" size="sm" className="flex items-center">
+//                 <ArrowUpDown className="h-4 w-4 mr-1" /> Sort
+//               </Button>
+//             </DropdownMenuTrigger>
+//             <DropdownMenuContent align="end">
+//               <DropdownMenuItem onClick={() => setSortBy("rating")}>
+//                 <Star className="h-4 w-4 mr-2" /> Highest Rating
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={() => setSortBy("price-low")}>
+//                 Price: Low to High
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={() => setSortBy("price-high")}>
+//                 Price: High to Low
+//               </DropdownMenuItem>
+//             </DropdownMenuContent>
+//           </DropdownMenu>
+//         </div>
+//       </div>
+      
+//       {locationFilter && (
+//         <div className="flex items-center">
+//           <span className="text-sm text-connectify-darkGray">
+//             Filtered by location: <span className="font-medium">{locationFilter}</span>
+//           </span>
+//           <Button 
+//             variant="ghost" 
+//             size="sm" 
+//             className="ml-2 h-6 text-sm" 
+//             onClick={() => setLocationFilter("")}
+//           >
+//             Clear
+//           </Button>
+//         </div>
+//       )}
+      
+//       {providers.length === 0 ? (
+//         <div className="text-center py-8">
+//           <p className="text-connectify-darkGray">No providers found. Try different search terms.</p>
+//         </div>
+//       ) : (
+//         <div className="space-y-4">
+//           {providers.map(provider => (
+//             <ProviderCard key={provider.id} provider={provider} />
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default SearchResults;
+// import { useState, useEffect } from "react";
+// import { useLocation } from "react-router-dom";
+// import SearchBar from "@/components/SearchBar";
+// import ProviderCard from "@/components/ProviderCard";
+// import Loading from "@/components/Loading";
+// import { Filter, ArrowUpDown, MapPin, Star } from "lucide-react";
+// import { 
+//   DropdownMenu, 
+//   DropdownMenuContent, 
+//   DropdownMenuItem, 
+//   DropdownMenuTrigger 
+// } from "@/components/ui/dropdown-menu";
+// import { Button } from "@/components/ui/button";
+// import api from "@/services/api";  // Ensure you have an api module to handle requests
+// import { endpoints } from "@/config/api";
+
+// interface Provider {
+//   id: string;
+//   name: string;
+//   photo: string;
+//   rating: number;
+//   price: string;
+//   category: string;
+//   location: string;
+// }
+
+// const SearchResults = () => {
+//   const location = useLocation();
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [providers, setProviders] = useState<Provider[]>([]);
+//   const [sortBy, setSortBy] = useState("rating");
+//   const [locationFilter, setLocationFilter] = useState("");
+//   const [error, setError] = useState<string | null>(null);
+
+//   // Get search params
+//   const queryParams = new URLSearchParams(location.search);
+//   const searchQuery = queryParams.get("q");
+//   const category = queryParams.get("category");
+
+//   useEffect(() => {
+//     const fetchProviders = async () => {
+//       setIsLoading(true);
+//       setError(null);
+//       try {
+//         const params = new URLSearchParams();
+//         if (searchQuery) params.append("q", searchQuery);
+//         if (category) params.append("category", category);
+//         if (locationFilter) params.append("location", locationFilter);
+//         if (sortBy) params.append("sort", sortBy);
+
+//         const response = await api.get(`${endpoints.providers.list}?${params.toString()}`);
+//         setProviders(response.data);
+//       } catch (err) {
+//         if (error instanceof Error) {
+//           setError(err.message);
+//         }
+//         setError("Failed to fetch providers. Please try again.");
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchProviders();
+//   }, [searchQuery, category, locationFilter, sortBy]);
+
+//   if (isLoading) return <Loading />;
+//   if (error) return <div>{error}</div>;
+
+//   return (
+//     <div className="space-y-6 animate-fade-in">
+//       <SearchBar />
+//       <h2>{searchQuery ? `Results for "${searchQuery}"` : 
+//                       category ? `${category} Services` : "All Providers"}</h2>
+//       {/* Further UI code */}
+//     </div>
+//   );
+// };
+// export default SearchResults;
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import SearchBar from "@/components/SearchBar";
 import ProviderCard from "@/components/ProviderCard";
 import Loading from "@/components/Loading";
-import { Filter, ArrowUpDown, MapPin, Star } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import axios from "axios";
+import api from "@/services/api";  // Ensure you have an api module to handle requests.
+import { endpoints } from "@/config/api";
 
 const SearchResults = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
-  interface Provider {
-  id: string;
-  name: string;
-  photo: string;
-  rating: number;
-  price: string;
-  category: string;
-  location: string;
-}
-
-const [providers, setProviders] = useState<Provider[]>([]);
+  const [providers, setProviders] = useState([]);
   const [sortBy, setSortBy] = useState("rating");
   const [locationFilter, setLocationFilter] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Get search params
   const queryParams = new URLSearchParams(location.search);
   const searchQuery = queryParams.get("q");
   const category = queryParams.get("category");
@@ -260,14 +485,10 @@ const [providers, setProviders] = useState<Provider[]>([]);
         if (locationFilter) params.append("location", locationFilter);
         if (sortBy) params.append("sort", sortBy);
 
-        const response = await axios.get(`http://localhost:5000/api/providers?${params.toString()}`);
+        const response = await api.get(`${endpoints.providers.list}?${params.toString()}`);
         setProviders(response.data);
-      } catch (err) {
-        if (axios.isAxiosError(err) && err.response) {
-          setError(err.response.data.message || "Failed to fetch providers. Please try again.");
-        } else {
-          setError("An unexpected error occurred. Please try again.");
-        }
+      } catch (error) {
+        setError("Failed to fetch providers. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -276,100 +497,17 @@ const [providers, setProviders] = useState<Provider[]>([]);
     fetchProviders();
   }, [searchQuery, category, locationFilter, sortBy]);
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-connectify-darkGray">{error}</p>
-        <Button onClick={() => window.location.reload()} className="mt-4 bg-connectify-blue hover:bg-connectify-darkBlue">
-          Retry
-        </Button>
-      </div>
-    );
-  }
+  if (isLoading) return <Loading />;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
       <SearchBar />
-      
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-connectify-darkGray">
-          {searchQuery ? `Results for "${searchQuery}"` : 
-          category ? `${category} Services` : "All Providers"}
-        </h2>
-        <div className="flex space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center">
-                <Filter className="h-4 w-4 mr-1" /> Filter
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLocationFilter("Lagos")}>
-                <MapPin className="h-4 w-4 mr-2" /> Lagos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocationFilter("Abuja")}>
-                <MapPin className="h-4 w-4 mr-2" /> Abuja
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocationFilter("Port Harcourt")}>
-                <MapPin className="h-4 w-4 mr-2" /> Port Harcourt
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocationFilter("")}>
-                Clear Filter
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center">
-                <ArrowUpDown className="h-4 w-4 mr-1" /> Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSortBy("rating")}>
-                <Star className="h-4 w-4 mr-2" /> Highest Rating
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("price-low")}>
-                Price: Low to High
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("price-high")}>
-                Price: High to Low
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-      
-      {locationFilter && (
-        <div className="flex items-center">
-          <span className="text-sm text-connectify-darkGray">
-            Filtered by location: <span className="font-medium">{locationFilter}</span>
-          </span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="ml-2 h-6 text-sm" 
-            onClick={() => setLocationFilter("")}
-          >
-            Clear
-          </Button>
-        </div>
-      )}
-      
+      <h2>{searchQuery ? `Results for "${searchQuery}"` : category ? `${category} Services` : "All Providers"}</h2>
       {providers.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-connectify-darkGray">No providers found. Try different search terms.</p>
-        </div>
+        <p>No providers found.</p>
       ) : (
-        <div className="space-y-4">
-          {providers.map(provider => (
-            <ProviderCard key={provider.id} provider={provider} />
-          ))}
-        </div>
+        providers.map(provider => <ProviderCard key={provider.id} provider={provider} />)
       )}
     </div>
   );
