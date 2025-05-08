@@ -1,4 +1,15 @@
-
+if (result.success) {
+  toast({
+    description: "You've successfully logged in.",
+  });
+  navigate(result.user.role === "provider" ? "/provider-dashboard" : "/");
+} else {
+  const error = await response.json();
+  toast({
+    title: "Login failed",
+    description: error.message,
+  });
+}
 // import React from "react";
 // import { useNavigate, Link } from "react-router-dom";
 // import { useForm } from "react-hook-form";
@@ -146,16 +157,40 @@ const Login = () => {
     }
   });
 
+  // const onSubmit = async (data: LoginFormData) => {
+  //   try {
+  //     const response = await api.post(endpoints.auth.login, data);
+  //     const result = response.data;
+  //     localStorage.setItem('token', result.token);
+  //     setIsAuthenticated(true);
+  //     setUserRole(result.user.role);
+  //       toast({
+  //         title: "Welcome back!",
+  //         description: "You've successfully logged in.",
+  //       });
+  //       navigate(result.user.role === "provider" ? "/provider-dashboard" : "/");
+  //     } else {
+  //       const error = await response.json();
+  //       toast({
+  //         title: "Login failed",
+  //         description: error.message || "Invalid credentials",
+  //         variant: "destructive",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: "An unexpected error occurred",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
+      const response = await api.post(endpoints.auth.login, data);
+      const result = response.data;
+  
+      if (result.success) {
         localStorage.setItem('token', result.token);
         setIsAuthenticated(true);
         setUserRole(result.user.role);
@@ -165,10 +200,9 @@ const Login = () => {
         });
         navigate(result.user.role === "provider" ? "/provider-dashboard" : "/");
       } else {
-        const error = await response.json();
         toast({
           title: "Login failed",
-          description: error.message || "Invalid credentials",
+          description: result.message || "Invalid credentials",
           variant: "destructive",
         });
       }

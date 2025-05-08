@@ -5,7 +5,22 @@ import { Calendar, Clock, User, MapPin, CheckCircle, XCircle, Clock3, ArrowRight
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Loading from "@/components/Loading";
-import axios from "axios"
+import api from "@/services/api";
+import { endpoints } from "@/config/api";
+
+interface Booking {
+  id: string;
+  providerId: string;
+  providerName: string;
+  providerPhoto: string;
+  service: string;
+  date: string;
+  time: string;
+  location: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  cost: string;
+  isPaid: boolean;
+}
 
 // Mock booking data
 // const mockBookings = [
@@ -78,10 +93,7 @@ const Bookings = () => {
           throw new Error("No authentication token found");
         }
 
-        const response = await axios.get("http://localhost:5000/api/bookings", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await api.get(endpoints.bookings.list, {
           params: {
             status: "all",
           },
