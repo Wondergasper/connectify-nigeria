@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 // import { useState, useEffect } from "react";
 // import { useLocation } from "react-router-dom";
@@ -454,13 +455,27 @@
 //   );
 // };
 // export default SearchResults;
+=======
+>>>>>>> 2c3710a (websocket problem)
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import SearchBar from "@/components/SearchBar";
 import ProviderCard from "@/components/ProviderCard";
 import Loading from "@/components/Loading";
+<<<<<<< HEAD
 import api from "@/services/api";  // Ensure you have an api module to handle requests.
 import { endpoints } from "@/config/api";
+=======
+import { Filter, ArrowUpDown, MapPin, Star } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import api from "@/lib/axios";
+>>>>>>> 2c3710a (websocket problem)
 
 const SearchResults = () => {
   const location = useLocation();
@@ -485,10 +500,35 @@ const SearchResults = () => {
         if (locationFilter) params.append("location", locationFilter);
         if (sortBy) params.append("sort", sortBy);
 
+<<<<<<< HEAD
         const response = await api.get(`${endpoints.providers.list}?${params.toString()}`);
         setProviders(response.data);
       } catch (error) {
         setError("Failed to fetch providers. Please try again.");
+=======
+        // Use the correct endpoint for fetching providers
+        const response = await api.get("/api/providers", {
+          params,
+          validateStatus: (status) => status < 500
+        });
+
+        if (response.status === 200) {
+          setProviders(response.data);
+        } else if (response.status === 404) {
+          setError("No providers found matching your criteria.");
+          setProviders([]);
+        } else {
+          setError("Failed to fetch providers. Please try again.");
+          setProviders([]);
+        }
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          setError("No providers found matching your criteria.");
+        } else {
+          setError("Failed to fetch providers. Please try again.");
+        }
+        setProviders([]);
+>>>>>>> 2c3710a (websocket problem)
       } finally {
         setIsLoading(false);
       }

@@ -140,6 +140,7 @@ import AuthCard from "@/components/auth/AuthCard";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { LogIn } from "lucide-react";
+import api from "@/lib/axios";
 
 interface LoginFormData {
   email: string;
@@ -208,8 +209,8 @@ const Login = () => {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Login failed",
+        description: error.response?.data?.message || "Invalid credentials",
         variant: "destructive",
       });
     }

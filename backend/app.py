@@ -13,6 +13,7 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY',
                                               'your-secret-key')
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+<<<<<<< HEAD
 CORS(app,
      resources={
          r"/api/*": {
@@ -22,6 +23,18 @@ CORS(app,
          }
      })
 
+=======
+
+# Configure CORS to allow requests from frontend
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:8080", "http://127.0.0.1:8080"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
+    }
+})
+>>>>>>> 2c3710a (websocket problem)
 
 # Database Models
 class User(db.Model):
@@ -138,6 +151,40 @@ def get_current_user():
         'notifications': user.notifications
     }), 200
 
+<<<<<<< HEAD
+=======
+@app.route('/api/auth/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('userType', 'customer')
+
+    if not name or not email or not password:
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({'message': 'Email already exists'}), 409
+
+    user = User(name=name, email=email, role=role)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+    # If provider, create Provider profile
+    if role == 'provider':
+        provider = Provider(user_id=user.id)
+        db.session.add(provider)
+        db.session.commit()
+
+    access_token = create_access_token(identity=user.id)
+    return jsonify({
+        'token': access_token,
+        'user': {'id': user.id, 'name': user.name, 'email': user.email, 'role': user.role}
+    }), 200
+
+>>>>>>> 2c3710a (websocket problem)
 
 # User Management Endpoints
 @app.route('/api/users/<int:user_id>', methods=['GET'])
@@ -211,22 +258,69 @@ def toggle_notifications(user_id):
 
 
 # Provider Management Endpoints
+@app.route('/api/providers', methods=['GET'])
+def list_providers():
+    query = db.session.query(Provider, User).join(User, Provider.user_id == User.id)
+    
+    if search := request.args.get('q'):
+        search_pattern = f"%{search.lower()}%"
+        query = query.filter(db.or_(
+            db.func.lower(User.name).like(search_pattern),
+            db.func.lower(Provider.category).like(search_pattern)
+        ))
+    if category := request.args.get('category'):
+        query = query.filter(Provider.category == category)
+    if location := request.args.get('location'):
+        query = query.filter(Provider.location == location)
+    if sort := request.args.get('sort'):
+        if sort == 'rating':
+            query = query.order_by(Provider.rating.desc())
+    
+    results = query.all()
+    providers = [{
+        'id': p.id, 
+        'name': u.name, 
+        'photo': p.photo, 
+        'rating': p.rating,
+        'price': p.price, 
+        'category': p.category, 
+        'location': p.location
+    } for p, u in results]
+    
+    return jsonify(providers), 200
+
 @app.route('/api/providers/<int:provider_id>', methods=['GET'])
 def get_provider(provider_id):
-    provider = Provider.query.get_or_404(provider_id)
-    user = User.query.get(provider.user_id)
-    return jsonify({
-        'id': provider.id,
-        'name': user.name,
-        'photo': provider.photo,
-        'rating': provider.rating,
-        'price': provider.price,
-        'category': provider.category,
-        'location': provider.location,
-        'bio': provider.bio,
-        'services': provider.services,
-        'availability': provider.availability
-    }), 200
+    try:
+        provider, user = db.session.query(Provider, User)\
+            .join(User, Provider.user_id == User.id)\
+            .filter(Provider.id == provider_id)\
+            .first_or_404()
+            
+        reviews = [{
+            'id': r.id, 
+            'user': r.user.name, 
+            'rating': r.rating, 
+            'comment': r.comment,
+            'date': r.created_at.strftime('%Y-%m-%d')
+        } for r in provider.reviews] if provider.reviews else []
+        
+        return jsonify({
+            'id': provider.id, 
+            'name': user.name, 
+            'photo': provider.photo,
+            'rating': provider.rating, 
+            'price': provider.price, 
+            'category': provider.category,
+            'location': provider.location, 
+            'bio': provider.bio, 
+            'services': provider.services,
+            'availability': provider.availability, 
+            'reviews': reviews
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Error fetching provider: {str(e)}")
+        return jsonify({'error': 'Failed to fetch provider details'}), 500
 
 
 @app.route('/api/providers/<int:provider_id>', methods=['PUT'])
@@ -420,6 +514,7 @@ def seed_dummy_data():
     with app.app_context():
         db.drop_all()
         db.create_all()
+<<<<<<< HEAD
 
         user1 = User(name="Chidi Okonkwo",
                      email="chidi@example.com",
@@ -433,8 +528,36 @@ def seed_dummy_data():
                      role="provider")
         user2.set_password("password123")
 
+=======
+        
+        # Create users
+        user1 = User(
+            name="Chidi Okonkwo",
+            email="chidi@example.com",
+            phone="+234123456789",
+            location="Lagos, Nigeria",
+            role="customer"
+        )
+        user1.set_password("password123")
+        db.session.add(user1)
+        
+        user2 = User(
+            name="Provider User",
+            email="provider@example.com",
+            phone="+234987654321",
+            location="Abuja, Nigeria",
+            role="provider"
+        )
+        user2.set_password("password123")
+        db.session.add(user2)
+        
+        # Commit users first to get their IDs
+        db.session.commit()
+        
+        # Create provider profile
+>>>>>>> 2c3710a (websocket problem)
         provider1 = Provider(
-            user_id=2,
+            user_id=user2.id,  # Use the actual user ID
             photo="https://randomuser.me/api/portraits/men/1.jpg",
             rating=4.8,
             price="₦2,500/hr",
@@ -442,6 +565,7 @@ def seed_dummy_data():
             location="Lagos",
             bio="Professional plumber with over 10 years of experience.",
             services=["Pipe Installation", "Drain Cleaning"],
+<<<<<<< HEAD
             availability=[{
                 "day": "Monday",
                 "hours": "9AM - 5PM"
@@ -462,10 +586,31 @@ def seed_dummy_data():
                            cost=5000.00)
 
         db.session.add_all([user1, user2, provider1, service1, booking1])
+=======
+            availability=[{"day": "Monday", "hours": "9AM - 5PM"}],
+            reviews=[]  # Initialize empty reviews
+        )
+        db.session.add(provider1)
+        
+        # Create service
+        service1 = Service(
+            name="Plumbing",
+            description="Professional plumbing services",
+            category="Home Services"
+        )
+        db.session.add(service1)
+        
+        # Commit everything
+>>>>>>> 2c3710a (websocket problem)
         db.session.commit()
         print("Dummy data seeded successfully!")
 
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     seed_dummy_data()
     app.run(debug=True)
+=======
+    seed_dummy_data()  # Initialize with test data
+    app.run(debug=True, port=5000)  # Explicitly set port to 5000
+>>>>>>> 2c3710a (websocket problem)

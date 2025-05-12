@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, User, MapPin, CheckCircle, XCircle, Clock3, ArrowRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Loading from "@/components/Loading";
+<<<<<<< HEAD
 import api from "@/services/api";
 import { endpoints } from "@/config/api";
 
@@ -21,6 +21,9 @@ interface Booking {
   cost: string;
   isPaid: boolean;
 }
+=======
+import api from "@/lib/axios";
+>>>>>>> 2c3710a (websocket problem)
 
 // Mock booking data
 // const mockBookings = [
@@ -85,7 +88,6 @@ const Bookings = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call
     const fetchBookings = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -93,7 +95,14 @@ const Bookings = () => {
           throw new Error("No authentication token found");
         }
 
+<<<<<<< HEAD
         const response = await api.get(endpoints.bookings.list, {
+=======
+        const response = await api.get("/api/bookings", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+>>>>>>> 2c3710a (websocket problem)
           params: {
             status: "all",
           },
@@ -108,11 +117,8 @@ const Bookings = () => {
     };
 
     fetchBookings();
-
-    return () => {
-      // Cleanup not needed for axios, but kept for consistency
-    };
   }, []);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":

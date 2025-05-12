@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 // import React from "react";
 // import { useNavigate, Link } from "react-router-dom";
@@ -169,6 +170,8 @@
 
 // export default Signup;
 
+=======
+>>>>>>> 2c3710a (websocket problem)
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -180,6 +183,7 @@ import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";  // Ensure you have an api module to handle requests.
 import { endpoints } from "@/config/api";
 import { UserPlus } from "lucide-react";
+import api from "@/lib/axios";
 
 interface SignupFormData {
   name: string;
@@ -203,6 +207,7 @@ const Signup = () => {
 
   const onSubmit = async (data: SignupFormData) => {
     try {
+<<<<<<< HEAD
       const response = await api.post(endpoints.auth.signup, data);
       const result = response.data;
 
@@ -210,16 +215,31 @@ const Signup = () => {
       setIsAuthenticated(true);
       setUserRole(result.user.role);
 
+=======
+      const response = await api.post('/api/auth/signup', data);
+      const result = response.data;
+      localStorage.setItem('token', result.token);
+      setIsAuthenticated(true);
+      setUserRole(result.user.role);
+>>>>>>> 2c3710a (websocket problem)
       toast({
         title: "Account created!",
         description: "Welcome to Connectify.",
       });
+<<<<<<< HEAD
 
       navigate(data.userType === "provider" ? "/provider-dashboard" : "/");
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to create account",
+=======
+      navigate(result.user.role === "provider" ? "/provider-dashboard" : "/");
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.response?.data?.message || "Could not create account",
+>>>>>>> 2c3710a (websocket problem)
         variant: "destructive",
       });
     }
