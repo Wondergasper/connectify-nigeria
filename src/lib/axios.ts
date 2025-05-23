@@ -5,7 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
@@ -14,7 +15,11 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Clean and validate the token
+      const cleanToken = token.trim();
+      if (cleanToken) {
+        config.headers.Authorization = `Bearer ${cleanToken}`;
+      }
     }
     return config;
   },
@@ -31,10 +36,12 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config;
 
-    // Handle 401 Unauthorized errors
-    if (error.response?.status === 401) {
+    // Handle 401 Unauthorized and 422 Unprocessable Entity errors
+    if (error.response?.status === 401 || error.response?.status === 422) {
       // Clear local storage
       localStorage.removeItem('token');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('isAuthenticated');
       
       // Redirect to login page if not already there
       if (window.location.pathname !== '/login') {
@@ -44,7 +51,6 @@ api.interceptors.response.use(
 
     // Handle 403 Forbidden errors
     if (error.response?.status === 403) {
-      // Handle forbidden access
       console.error('Access forbidden');
     }
 

@@ -2,18 +2,32 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, MapPin, Calendar, Clock, Phone, MessageCircle, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import Loading from "@/components/Loading";
 import api from "@/lib/axios";
 
+interface Provider {
+  id: string;
+  name: string;
+  photo: string;
+  category: string;
+  rating: number;
+  location: string;
+  price: string;
+  bio: string;
+  availability: Array<{ day: string; hours: string }>;
+  services: string[];
+  reviews: Array<{ id: string; user: string; rating: number; comment: string; date: string }>;
+}
+
 const ProviderProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [provider, setProvider] = useState<any>(null);
+  const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [bookingForm, setBookingForm] = useState({
@@ -172,13 +186,13 @@ const ProviderProfile = () => {
         <TabsContent value="about" className="space-y-4">
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">About</h2>
-            <p className="text-connectify-darkGray">{provider.bio}</p>
+            <p className="text-connectify-darkGray">{provider.bio || 'No bio available'}</p>
           </div>
           
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Availability</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {provider.availability.map((item: any, index: number) => (
+              {(provider.availability || []).map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Calendar className="h-5 w-5 text-connectify-blue mr-2" />
@@ -212,7 +226,7 @@ const ProviderProfile = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Services Offered</h2>
             <ul className="space-y-3">
-              {provider.services.map((service: string, index: number) => (
+              {(provider.services || []).map((service, index) => (
                 <li key={index} className="flex items-start">
                   <Briefcase className="h-5 w-5 text-connectify-blue mt-0.5 mr-2" />
                   <span>{service}</span>
@@ -228,12 +242,12 @@ const ProviderProfile = () => {
               <h2 className="text-xl font-semibold">Reviews</h2>
               <div className="flex items-center">
                 <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                <span className="ml-1 font-medium">{provider.rating}/5</span>
+                <span className="ml-1 font-medium">{provider.rating || 0}/5</span>
               </div>
             </div>
             
             <div className="space-y-4">
-              {provider.reviews.map((review: any) => (
+              {(provider.reviews || []).map((review) => (
                 <div key={review.id} className="border-b pb-4 last:border-b-0 last:pb-0">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{review.user}</span>
@@ -255,6 +269,9 @@ const ProviderProfile = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Book {provider.name}</DialogTitle>
+            <DialogDescription>
+              Fill out the form below to book a service with {provider.name}
+            </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleBookingSubmit} className="space-y-4">

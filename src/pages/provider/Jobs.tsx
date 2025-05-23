@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, X, Calendar, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import Loading from "@/components/Loading";
 
@@ -242,6 +241,9 @@ const ProviderJobs = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Job Details</DialogTitle>
+            <DialogDescription>
+              View the complete details of this job request
+            </DialogDescription>
           </DialogHeader>
           
           {selectedJob && (
@@ -292,6 +294,11 @@ const ProviderJobs = () => {
                newStatus === "cancelled" ? "Decline Job Request" : 
                "Mark Job as Completed"}
             </DialogTitle>
+            <DialogDescription>
+              {newStatus === "confirmed" ? "Review the job details before accepting" : 
+               newStatus === "cancelled" ? "Review the job details before declining" : 
+               "Review the job details before marking as completed"}
+            </DialogDescription>
           </DialogHeader>
           
           {selectedJob && (

@@ -8,6 +8,8 @@ import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/axios";
 import { UserPlus } from "lucide-react";
+import AuthCard from "@/components/auth/AuthCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SignupFormData {
   name: string;
@@ -44,11 +46,19 @@ const Signup = () => {
 
       navigate(result.user.role === "provider" ? "/provider-dashboard" : "/");
     } catch (error: any) {
-      toast({
-        title: "Signup failed",
-        description: error.response?.data?.message || "Could not create account",
-        variant: "destructive",
-      });
+      if (error.response?.status === 409) {
+        toast({
+          title: "Email already exists",
+          description: "An account with this email already exists. Please try logging in instead.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Signup failed",
+          description: error.response?.data?.message || "Could not create account",
+          variant: "destructive",
+        });
+      }
     }
   };
 
