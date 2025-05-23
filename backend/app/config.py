@@ -1,45 +1,40 @@
+from pydantic_settings import BaseSettings
+from typing import Optional
 import os
-from datetime import timedelta
+from dotenv import load_dotenv
 
-class Config:
-    # Flask
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
-    
+load_dotenv()
+
+class Settings(BaseSettings):
     # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
     
     # JWT
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'jwt-secret-key')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    CORS_ORIGINS = [
+    CORS_ORIGINS: list = [
         "http://localhost:5173",
-        "https://*.replit.dev",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080"
+        "http://localhost:3000",
+        "https://*.replit.dev"
     ]
     
     # File Upload
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    UPLOAD_FOLDER: str = "uploads"
+    MAX_CONTENT_LENGTH: int = 16 * 1024 * 1024  # 16MB
     
     # Email
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', True)
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    
-    # Payment Gateway
-    PAYMENT_GATEWAY_KEY = os.environ.get('PAYMENT_GATEWAY_KEY')
-    PAYMENT_GATEWAY_SECRET = os.environ.get('PAYMENT_GATEWAY_SECRET')
-    
-    # Redis (for caching and session management)
-    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-    
-    # Logging
-    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-    LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs', 'app.log') 
+    SMTP_TLS: bool = True
+    SMTP_PORT: Optional[int] = None
+    SMTP_HOST: Optional[str] = None
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    EMAILS_FROM_EMAIL: Optional[str] = None
+    EMAILS_FROM_NAME: Optional[str] = None
+
+    class Config:
+        case_sensitive = True
+
+settings = Settings() 

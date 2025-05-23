@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import auth, user, provider, job, booking, payment
 from app.database import engine, Base
-from app.routes import provider, auth, jobs, reviews
 from app.config import settings
 
 # Create database tables
@@ -9,7 +9,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Connectify Nigeria API",
-    description="Backend API for Connectify Nigeria - Service Provider Platform",
+    description="API for Connectify Nigeria - Service Provider Platform",
     version="1.0.0"
 )
 
@@ -24,6 +24,16 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(user.router)
 app.include_router(provider.router)
-app.include_router(jobs.router)
-app.include_router(reviews.router) 
+app.include_router(job.router)
+app.include_router(booking.router)
+app.include_router(payment.router)
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to Connectify Nigeria API",
+        "version": "1.0.0",
+        "docs_url": "/docs"
+    } 
