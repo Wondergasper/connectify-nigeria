@@ -13,28 +13,16 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY',
                                               'your-secret-key')
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-<<<<<<< HEAD
-CORS(app,
-     resources={
-         r"/api/*": {
-             "origins": ["http://localhost:5173", "https://*.replit.dev"],
-             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-             "allow_headers": ["Content-Type", "Authorization"]
-         }
-     })
-
-=======
 
 # Configure CORS to allow requests from frontend
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:8080", "http://127.0.0.1:8080"],
+        "origins": ["http://localhost:5173", "https://*.replit.dev", "http://localhost:8080", "http://127.0.0.1:8080"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
     }
 })
->>>>>>> 2c3710a (websocket problem)
 
 # Database Models
 class User(db.Model):
@@ -151,8 +139,7 @@ def get_current_user():
         'notifications': user.notifications
     }), 200
 
-<<<<<<< HEAD
-=======
+
 @app.route('/api/auth/signup', methods=['POST'])
 def signup():
     data = request.get_json()
@@ -184,7 +171,6 @@ def signup():
         'user': {'id': user.id, 'name': user.name, 'email': user.email, 'role': user.role}
     }), 200
 
->>>>>>> 2c3710a (websocket problem)
 
 # User Management Endpoints
 @app.route('/api/users/<int:user_id>', methods=['GET'])
@@ -514,13 +500,14 @@ def seed_dummy_data():
     with app.app_context():
         db.drop_all()
         db.create_all()
-<<<<<<< HEAD
 
+        # Create users first
         user1 = User(name="Chidi Okonkwo",
                      email="chidi@example.com",
                      phone="+234123456789",
                      location="Lagos, Nigeria")
         user1.set_password("password123")
+        
         user2 = User(name="Provider User",
                      email="provider@example.com",
                      phone="+234987654321",
@@ -528,36 +515,14 @@ def seed_dummy_data():
                      role="provider")
         user2.set_password("password123")
 
-=======
-        
-        # Create users
-        user1 = User(
-            name="Chidi Okonkwo",
-            email="chidi@example.com",
-            phone="+234123456789",
-            location="Lagos, Nigeria",
-            role="customer"
-        )
-        user1.set_password("password123")
+        # Add users to session and commit to get their IDs
         db.session.add(user1)
-        
-        user2 = User(
-            name="Provider User",
-            email="provider@example.com",
-            phone="+234987654321",
-            location="Abuja, Nigeria",
-            role="provider"
-        )
-        user2.set_password("password123")
         db.session.add(user2)
-        
-        # Commit users first to get their IDs
-        db.session.commit()
-        
-        # Create provider profile
->>>>>>> 2c3710a (websocket problem)
+        db.session.commit()  # Commit here to get the user IDs
+
+        # Now create provider with the committed user ID
         provider1 = Provider(
-            user_id=user2.id,  # Use the actual user ID
+            user_id=user2.id,  # This will now have a valid ID
             photo="https://randomuser.me/api/portraits/men/1.jpg",
             rating=4.8,
             price="₦2,500/hr",
@@ -565,30 +530,11 @@ def seed_dummy_data():
             location="Lagos",
             bio="Professional plumber with over 10 years of experience.",
             services=["Pipe Installation", "Drain Cleaning"],
-<<<<<<< HEAD
             availability=[{
                 "day": "Monday",
                 "hours": "9AM - 5PM"
-            }])
-
-        service1 = Service(name="Plumbing",
-                           description="Plumbing services",
-                           category="Home Services")
-
-        booking1 = Booking(user_id=1,
-                           provider_id=1,
-                           service="Pipe Installation",
-                           date=datetime.strptime("2023-11-15",
-                                                  '%Y-%m-%d').date(),
-                           time=datetime.strptime("14:00", '%H:%M').time(),
-                           location="123 Lagos Street",
-                           notes="I need a new pipe installed.",
-                           cost=5000.00)
-
-        db.session.add_all([user1, user2, provider1, service1, booking1])
-=======
-            availability=[{"day": "Monday", "hours": "9AM - 5PM"}],
-            reviews=[]  # Initialize empty reviews
+            }],
+            reviews=[]
         )
         db.session.add(provider1)
         
@@ -600,17 +546,11 @@ def seed_dummy_data():
         )
         db.session.add(service1)
         
-        # Commit everything
->>>>>>> 2c3710a (websocket problem)
+        # Final commit
         db.session.commit()
         print("Dummy data seeded successfully!")
 
 
 if __name__ == '__main__':
-<<<<<<< HEAD
     seed_dummy_data()
     app.run(debug=True)
-=======
-    seed_dummy_data()  # Initialize with test data
-    app.run(debug=True, port=5000)  # Explicitly set port to 5000
->>>>>>> 2c3710a (websocket problem)
