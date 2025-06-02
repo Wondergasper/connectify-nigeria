@@ -2,143 +2,137 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
-from app.schemas.provider import ProviderCreate, ProviderUpdate, ProviderResponse
-from app.schemas.job import JobResponse, JobStats
-from app.services.provider_service import ProviderService
-from app.services.job_service import JobService
-from app.utils.auth import get_current_user
+from app.models.provider import Provider
+from app.models.job import Job
+from app.models.user import User
+from app.schemas.provider import ProviderResponse, ProviderUpdate
+from app.schemas.job import JobResponse
+from app.auth import get_current_user
+from app.core.errors import NotFoundError, ValidationError, DatabaseError
 
-router = APIRouter(prefix="/api/provider", tags=["provider"])
-
-@router.post("/", response_model=ProviderResponse)
-def create_provider(
-    provider: ProviderCreate,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    provider_service = ProviderService(db)
-    return provider_service.create_provider(provider)
+router = APIRouter(prefix="/api/providers", tags=["providers"])
 
 @router.get("/profile", response_model=ProviderResponse)
-def get_provider_profile(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+async def get_provider_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    provider_service = ProviderService(db)
-    provider = provider_service.get_provider_by_user_id(current_user["id"])
-    if not provider:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Provider profile not found"
-        )
-    return provider
+    """Get the current provider's profile"""
+    try:
+        provider = db.query(Provider).filter(Provider.user_id == current_user.id).first()
+        if not provider:
+            raise NotFoundError("Provider profile not found")
+        return provider
+    except Exception as e:
+        raise DatabaseError(f"Failed to fetch provider profile: {str(e)}")
 
 @router.put("/profile", response_model=ProviderResponse)
-def update_provider_profile(
-    provider_update: ProviderUpdate,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+async def update_provider_profile(
+    provider_data: ProviderUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    provider_service = ProviderService(db)
-    provider = provider_service.get_provider_by_user_id(current_user["id"])
-    if not provider:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Provider profile not found"
-        )
-    
-    updated_provider = provider_service.update_provider(provider.id, provider_update)
-    if not updated_provider:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to update provider profile"
-        )
-    return updated_provider
+    """Update the current provider's profile"""
+    try:
+        provider = db.query(Provider).filter(Provider.user_id == current_user.id).first()
+        if not provider:
+            raise NotFoundError("Provider profile not found")
 
-@router.get("/dashboard/stats", response_model=JobStats)
-def get_dashboard_stats(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    provider_service = ProviderService(db)
-    provider = provider_service.get_provider_by_user_id(current_user["id"])
-    if not provider:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Provider profile not found"
-        )
-    
-    stats = provider_service.get_provider_stats(provider.id)
-    if not stats:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to get provider stats"
-        )
-    return stats
+        for field, value in provider_data.dict(exclude_unset=True).items():
+            setattr(provider, field, value)
+        
+        db.commit()
+        db.refresh(provider)
+        return provider
+    except ValidationError as e:
+        raise e
+    except Exception as e:
+        raise DatabaseError(f"Failed to update provider profile: {str(e)}")
 
 @router.get("/jobs", response_model=List[JobResponse])
-def get_provider_jobs(
-    status: str = None,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+async def get_provider_jobs(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    provider_service = ProviderService(db)
-    provider = provider_service.get_provider_by_user_id(current_user["id"])
-    if not provider:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Provider profile not found"
-        )
-    
-    job_service = JobService(db)
-    jobs = job_service.get_provider_jobs(provider.id, status)
-    return jobs
-
-@router.put("/jobs/{job_id}/status")
-def update_job_status(
-    job_id: int,
-    status: str,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    provider_service = ProviderService(db)
-    provider = provider_service.get_provider_by_user_id(current_user["id"])
-    if not provider:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Provider profile not found"
-        )
-    
-    job_service = JobService(db)
-    job = job_service.get_job(job_id)
-    if not job or job.provider_id != provider.id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
-        )
-    
-    updated_job = job_service.update_job_status(job_id, status)
-    if not updated_job:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to update job status"
-        )
-    return {"message": "Job status updated successfully"}
+    """Get all jobs for the current provider"""
+    try:
+        provider = db.query(Provider).filter(Provider.user_id == current_user.id).first()
+        if not provider:
+            raise NotFoundError("Provider profile not found")
+        
+        jobs = db.query(Job).filter(Job.provider_id == provider.id).all()
+        return jobs
+    except Exception as e:
+        raise DatabaseError(f"Failed to fetch provider jobs: {str(e)}")
 
 @router.get("/earnings")
-def get_earnings_overview(
-    days: int = 7,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+async def get_provider_earnings(
+    time_range: str = "month",
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    provider_service = ProviderService(db)
-    provider = provider_service.get_provider_by_user_id(current_user["id"])
-    if not provider:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Provider profile not found"
-        )
-    
-    job_service = JobService(db)
-    earnings = job_service.get_earnings_overview(provider.id, days)
-    return earnings 
+    """Get earnings for the current provider"""
+    try:
+        provider = db.query(Provider).filter(Provider.user_id == current_user.id).first()
+        if not provider:
+            raise NotFoundError("Provider profile not found")
+        
+        # Calculate earnings based on time range
+        # This is a simplified example - you'll need to implement the actual logic
+        earnings = {
+            "total_earnings": 0,
+            "period_earnings": 0,
+            "earnings_by_period": [],
+            "recent_payments": []
+        }
+        return earnings
+    except Exception as e:
+        raise DatabaseError(f"Failed to fetch provider earnings: {str(e)}")
+
+@router.get("/analytics")
+async def get_provider_analytics(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get analytics for the current provider"""
+    try:
+        provider = db.query(Provider).filter(Provider.user_id == current_user.id).first()
+        if not provider:
+            raise NotFoundError("Provider profile not found")
+        
+        # Calculate analytics
+        # This is a simplified example - you'll need to implement the actual logic
+        analytics = {
+            "total_jobs": 0,
+            "completed_jobs": 0,
+            "total_earnings": 0,
+            "average_rating": 0,
+            "jobs_by_category": [],
+            "earnings_by_month": [],
+            "customer_ratings": []
+        }
+        return analytics
+    except Exception as e:
+        raise DatabaseError(f"Failed to fetch provider analytics: {str(e)}")
+
+@router.get("/reviews")
+async def get_provider_reviews(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get reviews for the current provider"""
+    try:
+        provider = db.query(Provider).filter(Provider.user_id == current_user.id).first()
+        if not provider:
+            raise NotFoundError("Provider profile not found")
+        
+        # Get reviews
+        # This is a simplified example - you'll need to implement the actual logic
+        reviews = {
+            "average_rating": 0,
+            "total_reviews": 0,
+            "reviews": []
+        }
+        return reviews
+    except Exception as e:
+        raise DatabaseError(f"Failed to fetch provider reviews: {str(e)}") 

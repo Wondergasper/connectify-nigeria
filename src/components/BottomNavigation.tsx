@@ -1,7 +1,7 @@
-
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Calendar, User, Briefcase, BarChart3, Clipboard } from "lucide-react";
+import { Home, Search, Calendar, User, Briefcase, BarChart3, Clipboard, Bell } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import { Notifications } from "@/components/ui/notifications";
 
 const BottomNavigation = () => {
   const location = useLocation();
@@ -27,6 +27,10 @@ const BottomNavigation = () => {
             <Clipboard className="h-6 w-6" />
             <span>Jobs</span>
           </Link>
+          <div className="nav-item">
+            <Notifications />
+            <span>Notifications</span>
+          </div>
           <Link to="/provider-analytics" className={`nav-item ${isActive("/provider-analytics") ? "active" : ""}`}>
             <BarChart3 className="h-6 w-6" />
             <span>Analytics</span>
@@ -52,6 +56,10 @@ const BottomNavigation = () => {
           <Search className="h-6 w-6" />
           <span>Search</span>
         </Link>
+        <div className="nav-item">
+          <Notifications />
+          <span>Notifications</span>
+        </div>
         <Link to="/bookings" className={`nav-item ${isActive("/bookings") ? "active" : ""}`}>
           <Calendar className="h-6 w-6" />
           <span>Bookings</span>

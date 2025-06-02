@@ -1,6 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth, user, provider, job, booking, payment
+from app.routes import (
+    auth,
+    provider,
+    job,
+    booking,
+    payment,
+    analytics,
+    review,
+    earnings
+)
 from app.database import engine, Base
 from app.config import settings
 
@@ -24,11 +33,13 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
-app.include_router(user.router)
 app.include_router(provider.router)
 app.include_router(job.router)
 app.include_router(booking.router)
 app.include_router(payment.router)
+app.include_router(analytics.router)
+app.include_router(review.router)
+app.include_router(earnings.router)
 
 @app.get("/")
 async def root():

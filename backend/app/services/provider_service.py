@@ -4,47 +4,118 @@ from app.models.provider import Provider
 from app.schemas.provider import ProviderCreate, ProviderUpdate
 from app.schemas.job import JobStats
 from datetime import datetime, timedelta
+from app.models.user import User
+from fastapi import HTTPException, status
+import json
 
 class ProviderService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_provider(self, provider: ProviderCreate) -> Provider:
-        db_provider = Provider(
-            user_id=provider.user_id,
-            name=provider.name,
-            email=provider.email,
-            phone=provider.phone,
-            location=provider.location,
-            category=provider.category,
-            bio=provider.bio,
-            base_rate=provider.base_rate,
-            services=provider.services,
-            availability=provider.availability
+    def create_provider(self, provider_data: ProviderCreate, user_id: str) -> Provider:
+        # Check if user already has a provider profile
+        existing_provider = self.db.query(Provider).filter(Provider.user_id == user_id).first()
+        if existing_provider:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User already has a provider profile"
+            )
+
+        # Create new provider
+        provider = Provider(
+            user_id=user_id,
+            **provider_data.model_dump()
         )
-        self.db.add(db_provider)
+        self.db.add(provider)
         self.db.commit()
-        self.db.refresh(db_provider)
-        return db_provider
+        self.db.refresh(provider)
+        return provider
 
-    def get_provider(self, provider_id: int) -> Optional[Provider]:
-        return self.db.query(Provider).filter(Provider.id == provider_id).first()
+    def get_provider(self, provider_id: str) -> Provider:
+        provider = self.db.query(Provider).filter(Provider.id == provider_id).first()
+        if not provider:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Provider not found"
+            )
+        return provider
 
-    def get_provider_by_user_id(self, user_id: int) -> Optional[Provider]:
-        return self.db.query(Provider).filter(Provider.user_id == user_id).first()
+    def get_provider_by_user_id(self, user_id: str) -> Provider:
+        provider = self.db.query(Provider).filter(Provider.user_id == user_id).first()
+        if not provider:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Provider profile not found"
+            )
+        return provider
 
-    def update_provider(self, provider_id: int, provider_update: ProviderUpdate) -> Optional[Provider]:
-        db_provider = self.get_provider(provider_id)
-        if not db_provider:
-            return None
-
-        update_data = provider_update.dict(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(db_provider, field, value)
-
+    def update_provider(self, provider_id: str, provider_data: ProviderUpdate) -> Provider:
+        provider = self.get_provider(provider_id)
+        
+        # Update provider fields
+        for field, value in provider_data.model_dump(exclude_unset=True).items():
+            setattr(provider, field, value)
+        
         self.db.commit()
-        self.db.refresh(db_provider)
-        return db_provider
+        self.db.refresh(provider)
+        return provider
+
+    def delete_provider(self, provider_id: str):
+        provider = self.get_provider(provider_id)
+        self.db.delete(provider)
+        self.db.commit()
+
+    def get_provider_profile(self, provider_id: str) -> dict:
+        provider = self.get_provider(provider_id)
+        
+        # Get user information
+        user = self.db.query(User).filter(User.id == provider.user_id).first()
+        
+        # Get provider's jobs
+        jobs = provider.jobs
+        
+        # Get provider's reviews
+        reviews = provider.reviews
+        
+        return {
+            "provider": provider,
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email
+            },
+            "jobs": [job.__dict__ for job in jobs],
+            "reviews": [review.__dict__ for review in reviews]
+        }
+
+    def update_availability(self, provider_id: str, availability: str):
+        provider = self.get_provider(provider_id)
+        
+        # Validate availability JSON
+        try:
+            json.loads(availability)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid availability format"
+            )
+        
+        provider.availability = availability
+        self.db.commit()
+        self.db.refresh(provider)
+        return provider
+
+    def update_rating(self, provider_id: str, new_rating: float):
+        provider = self.get_provider(provider_id)
+        
+        # Update rating and total reviews
+        total_rating = provider.rating * provider.total_reviews
+        provider.total_reviews += 1
+        provider.rating = (total_rating + new_rating) / provider.total_reviews
+        
+        self.db.commit()
+        self.db.refresh(provider)
+        return provider
 
     def get_provider_stats(self, provider_id: int) -> JobStats:
         provider = self.get_provider(provider_id)
@@ -100,16 +171,6 @@ class ProviderService:
             }
             for job in recent_jobs
         ]
-
-    def update_availability(self, provider_id: int, availability: List[dict]) -> Optional[Provider]:
-        provider = self.get_provider(provider_id)
-        if not provider:
-            return None
-
-        provider.availability = availability
-        self.db.commit()
-        self.db.refresh(provider)
-        return provider
 
     def update_services(self, provider_id: int, services: List[str]) -> Optional[Provider]:
         provider = self.get_provider(provider_id)

@@ -1,7 +1,8 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Dict, List, Optional
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 class JobStatus(str, Enum):
     PENDING = "pending"
@@ -11,47 +12,42 @@ class JobStatus(str, Enum):
     CANCELLED = "cancelled"
 
 class JobBase(BaseModel):
-    service: str
-    description: Optional[str] = None
-    location: str
-    scheduled_date: datetime
-    scheduled_time: str
-    cost: float
-    notes: Optional[str] = None
+    service_type: str = Field(..., description="Type of service requested")
+    scheduled_date: datetime = Field(..., description="Date when the service is scheduled")
+    scheduled_time: str = Field(..., description="Time when the service is scheduled")
+    location: str = Field(..., description="Location where the service will be provided")
+    notes: Optional[str] = Field(None, description="Additional notes about the job")
+    amount: float = Field(..., description="Amount to be paid for the service")
 
 class JobCreate(JobBase):
-    provider_id: int
-    customer_id: int
+    provider_id: UUID = Field(..., description="ID of the provider who will perform the service")
 
 class JobUpdate(BaseModel):
-    service: Optional[str] = None
-    description: Optional[str] = None
-    location: Optional[str] = None
+    service_type: Optional[str] = None
     scheduled_date: Optional[datetime] = None
     scheduled_time: Optional[str] = None
-    status: Optional[JobStatus] = None
-    cost: Optional[float] = None
+    location: Optional[str] = None
     notes: Optional[str] = None
+    amount: Optional[float] = None
 
-class JobInDB(JobBase):
-    id: int
-    provider_id: int
-    customer_id: int
-    status: JobStatus
+class JobResponse(JobBase):
+    id: UUID
+    customer_id: UUID
+    provider_id: UUID
+    status: str
     created_at: datetime
     updated_at: datetime
+    completed_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True
-
-class JobResponse(JobInDB):
-    pass
+        orm_mode = True
 
 class JobStats(BaseModel):
     total_jobs: int
-    pending_jobs: int
-    confirmed_jobs: int
     completed_jobs: int
-    cancelled_jobs: int
     total_earnings: float
-    average_rating: float 
+    jobs_by_status: Dict[str, int]
+    recent_jobs: List[JobResponse]
+
+    class Config:
+        orm_mode = True 

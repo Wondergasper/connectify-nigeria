@@ -1,37 +1,38 @@
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.database import Base
-import enum
+from datetime import datetime
+import uuid
+from enum import Enum
 
-class JobStatus(enum.Enum):
+from app.database import Base
+
+class JobStatus(Enum):
     PENDING = "pending"
-    CONFIRMED = "confirmed"
-    IN_PROGRESS = "in_progress"
+    ACTIVE = "active"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
 
 class Job(Base):
     __tablename__ = "jobs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    provider_id = Column(Integer, ForeignKey("providers.id"))
-    customer_id = Column(Integer, ForeignKey("users.id"))
-    service = Column(String(100), nullable=False)
-    description = Column(String(500))
-    location = Column(String(200))
-    scheduled_date = Column(DateTime)
-    scheduled_time = Column(String(10))  # Store as "HH:MM" format
-    status = Column(Enum(JobStatus), default=JobStatus.PENDING)
-    cost = Column(Float)
-    notes = Column(String(500))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    id = Column(String, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(String, nullable=False, default="pending")
+    amount = Column(Float, nullable=False)
+    
+    # Foreign keys
+    provider_id = Column(String, ForeignKey("providers.id"), nullable=False)
+    customer_id = Column(String, ForeignKey("users.id"), nullable=False)
+    
     # Relationships
     provider = relationship("Provider", back_populates="jobs")
     customer = relationship("User", back_populates="jobs")
-    review = relationship("Review", back_populates="job", uselist=False)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
-        return f"<Job {self.id} - {self.service}>" 
+        return f"<Job {self.id} - {self.title}>" 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -10,75 +9,78 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Loading from "@/components/Loading";
+import { useToast } from "@/components/ui/use-toast";
+import apiService from "@/services/api";
 
-// Mock provider data
-const mockProviderData = {
-  name: "John Okafor",
-  category: "Plumbing",
-  stats: {
-    newRequests: 3,
-    activeJobs: 2,
-    completedJobs: 15,
-    totalEarnings: "₦75,000",
-    averageRating: 4.8
-  },
-  recentJobs: [
-    {
-      id: "job1",
-      customer: "Chioma Eze",
-      service: "Pipe Installation",
-      date: "2023-11-15",
-      time: "14:00",
-      status: "completed",
-      amount: "₦5,000"
-    },
-    {
-      id: "job2",
-      customer: "Emmanuel Nwachukwu",
-      service: "Drain Cleaning",
-      date: "2023-11-17",
-      time: "10:00",
-      status: "confirmed",
-      amount: "₦3,500"
-    },
-    {
-      id: "job3",
-      customer: "Blessing Ibrahim",
-      service: "Fixture Installation",
-      date: "2023-11-20",
-      time: "16:30",
-      status: "pending",
-      amount: "₦4,500"
-    }
-  ],
-  recentEarnings: [
-    { day: "Mon", amount: 5000 },
-    { day: "Tue", amount: 3500 },
-    { day: "Wed", amount: 0 },
-    { day: "Thu", amount: 7500 },
-    { day: "Fri", amount: 4000 },
-    { day: "Sat", amount: 8000 },
-    { day: "Sun", amount: 0 }
-  ]
-};
+interface ProviderProfile {
+  provider: {
+    business_name: string;
+    service_category: string;
+    rating: number;
+    total_reviews: number;
+  };
+  user: {
+    name: string;
+  };
+  jobs: Array<{
+    id: string;
+    customer_name: string;
+    service_type: string;
+    scheduled_date: string;
+    scheduled_time: string;
+    status: string;
+    amount: number;
+  }>;
+}
+
+interface JobStats {
+  new_requests: number;
+  active_jobs: number;
+  completed_jobs: number;
+  total_earnings: number;
+  earnings_trend: number;
+  jobs_trend: number;
+  earnings_overview: {
+    daily: number[];
+    labels: string[];
+  };
+  max_earnings: number;
+}
 
 const ProviderDashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [providerData, setProviderData] = useState<any>(null);
+  const [profile, setProfile] = useState<ProviderProfile | null>(null);
+  const [stats, setStats] = useState<JobStats | null>(null);
 
   useEffect(() => {
-    // Simulate API call
-    const timer = setTimeout(() => {
-      setProviderData(mockProviderData);
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        const [profileData, statsData] = await Promise.all([
+          apiService.getProviderProfile(),
+          apiService.getProviderAnalytics()
+        ]);
+        
+        setProfile(profileData);
+        setStats(statsData);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "completed":
         return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Completed</span>;
       case "confirmed":
@@ -92,7 +94,15 @@ const ProviderDashboard = () => {
     }
   };
 
-  if (loading) {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  if (loading || !profile || !stats) {
     return <Loading />;
   }
 
@@ -100,8 +110,8 @@ const ProviderDashboard = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-connectify-darkGray">{providerData.name}</h1>
-          <p className="text-connectify-mediumGray">{providerData.category} Service Provider</p>
+          <h1 className="text-2xl font-bold text-connectify-darkGray">{profile.user.name}</h1>
+          <p className="text-connectify-mediumGray">{profile.provider.service_category} Service Provider</p>
         </div>
         
         <div className="flex space-x-2 mt-4 md:mt-0">
@@ -127,10 +137,19 @@ const ProviderDashboard = () => {
             <Briefcase className="h-4 w-4 text-connectify-mediumGray" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{providerData.stats.newRequests}</div>
+            <div className="text-2xl font-bold">{stats.new_requests}</div>
             <p className="text-xs text-connectify-mediumGray">
-              <ArrowUp className="h-3 w-3 text-green-500 inline mr-1" />
-              <span className="text-green-500 font-medium">+2</span> from last week
+              {stats.jobs_trend > 0 ? (
+                <>
+                  <ArrowUp className="h-3 w-3 text-green-500 inline mr-1" />
+                  <span className="text-green-500 font-medium">+{stats.jobs_trend}</span>
+                </>
+              ) : (
+                <>
+                  <ArrowDown className="h-3 w-3 text-red-500 inline mr-1" />
+                  <span className="text-red-500 font-medium">{stats.jobs_trend}</span>
+                </>
+              )} from last week
             </p>
           </CardContent>
         </Card>
@@ -141,10 +160,19 @@ const ProviderDashboard = () => {
             <Calendar className="h-4 w-4 text-connectify-mediumGray" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{providerData.stats.activeJobs}</div>
+            <div className="text-2xl font-bold">{stats.active_jobs}</div>
             <p className="text-xs text-connectify-mediumGray">
-              <ArrowDown className="h-3 w-3 text-red-500 inline mr-1" />
-              <span className="text-red-500 font-medium">-1</span> from last week
+              {stats.jobs_trend > 0 ? (
+                <>
+                  <ArrowUp className="h-3 w-3 text-green-500 inline mr-1" />
+                  <span className="text-green-500 font-medium">+{stats.jobs_trend}</span>
+                </>
+              ) : (
+                <>
+                  <ArrowDown className="h-3 w-3 text-red-500 inline mr-1" />
+                  <span className="text-red-500 font-medium">{stats.jobs_trend}</span>
+                </>
+              )} from last week
             </p>
           </CardContent>
         </Card>
@@ -155,10 +183,19 @@ const ProviderDashboard = () => {
             <DollarSign className="h-4 w-4 text-connectify-mediumGray" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{providerData.stats.totalEarnings}</div>
+            <div className="text-2xl font-bold">{formatCurrency(stats.total_earnings)}</div>
             <p className="text-xs text-connectify-mediumGray">
-              <ArrowUp className="h-3 w-3 text-green-500 inline mr-1" />
-              <span className="text-green-500 font-medium">+₦22,500</span> from last month
+              {stats.earnings_trend > 0 ? (
+                <>
+                  <ArrowUp className="h-3 w-3 text-green-500 inline mr-1" />
+                  <span className="text-green-500 font-medium">+{formatCurrency(stats.earnings_trend)}</span>
+                </>
+              ) : (
+                <>
+                  <ArrowDown className="h-3 w-3 text-red-500 inline mr-1" />
+                  <span className="text-red-500 font-medium">{formatCurrency(stats.earnings_trend)}</span>
+                </>
+              )} from last month
             </p>
           </CardContent>
         </Card>
@@ -169,8 +206,8 @@ const ProviderDashboard = () => {
             <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{providerData.stats.averageRating}</div>
-            <p className="text-xs text-connectify-mediumGray">Based on {providerData.stats.completedJobs} completed jobs</p>
+            <div className="text-2xl font-bold">{profile.provider.rating.toFixed(1)}</div>
+            <p className="text-xs text-connectify-mediumGray">Based on {profile.provider.total_reviews} reviews</p>
           </CardContent>
         </Card>
       </div>
@@ -187,19 +224,19 @@ const ProviderDashboard = () => {
               <CardTitle className="text-lg">Recent Jobs</CardTitle>
             </CardHeader>
             <CardContent>
-              {providerData.recentJobs.length === 0 ? (
+              {profile.jobs.length === 0 ? (
                 <p className="text-center py-4 text-connectify-mediumGray">No recent jobs found.</p>
               ) : (
                 <div className="space-y-4">
-                  {providerData.recentJobs.map((job: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center border-b pb-4 last:border-b-0 last:pb-0">
+                  {profile.jobs.map((job) => (
+                    <div key={job.id} className="flex justify-between items-center border-b pb-4 last:border-b-0 last:pb-0">
                       <div>
-                        <p className="font-medium">{job.service}</p>
-                        <p className="text-sm text-connectify-mediumGray">Customer: {job.customer}</p>
-                        <p className="text-sm text-connectify-mediumGray">{job.date} at {job.time}</p>
+                        <p className="font-medium">{job.service_type}</p>
+                        <p className="text-sm text-connectify-mediumGray">Customer: {job.customer_name}</p>
+                        <p className="text-sm text-connectify-mediumGray">{job.scheduled_date} at {job.scheduled_time}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{job.amount}</p>
+                        <p className="font-medium">{formatCurrency(job.amount)}</p>
                         <div className="mt-1">{getStatusBadge(job.status)}</div>
                       </div>
                     </div>
@@ -238,33 +275,18 @@ const ProviderDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[200px] flex items-end justify-between pt-6">
-                {providerData.recentEarnings.map((day: any, index: number) => (
+                {stats.earnings_overview?.map((day: any, index: number) => (
                   <div key={index} className="flex flex-col items-center">
                     <div 
                       className="bg-connectify-blue w-8 rounded-t-sm" 
                       style={{ 
-                        height: `${day.amount ? (day.amount / 8000) * 150 : 4}px`,
+                        height: `${day.amount ? (day.amount / stats.max_earnings) * 150 : 4}px`,
                         backgroundColor: day.amount === 0 ? '#e5e7eb' : undefined
                       }}
                     ></div>
                     <span className="text-xs mt-2">{day.day}</span>
                   </div>
                 ))}
-              </div>
-              
-              <div className="flex justify-between items-center mt-8 pt-4 border-t">
-                <div>
-                  <p className="text-sm text-connectify-mediumGray">This Week</p>
-                  <p className="text-xl font-bold">₦28,000</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-connectify-blue"
-                  onClick={() => navigate("/provider-analytics")}
-                >
-                  View Report
-                </Button>
               </div>
             </CardContent>
           </Card>

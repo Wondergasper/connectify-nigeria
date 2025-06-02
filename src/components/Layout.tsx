@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import BottomNavigation from "./BottomNavigation";
@@ -11,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useUser } from "@/contexts/UserContext";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Notifications } from "@/components/ui/notifications";
 
 const Layout = () => {
   const isMobile = useIsMobile();
@@ -142,6 +142,7 @@ const Layout = () => {
         </div>
         
         <div className="flex items-center space-x-2">
+          {isAuthenticated && <Notifications />}
           {!isAuthenticated ? (
             <div className="flex gap-2">
               <Button

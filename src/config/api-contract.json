@@ -1,0 +1,310 @@
+{
+  "baseUrl": "http://localhost:8000/api/v1",
+  "endpoints": {
+    "provider": {
+      "dashboard": {
+        "path": "/provider/dashboard",
+        "method": "GET",
+        "response": {
+          "stats": {
+            "totalJobs": "number",
+            "activeJobs": "number",
+            "completedJobs": "number",
+            "totalEarnings": "number",
+            "averageRating": "number"
+          },
+          "recentJobs": "array",
+          "upcomingJobs": "array"
+        }
+      },
+      "jobs": {
+        "list": {
+          "path": "/provider/jobs",
+          "method": "GET",
+          "queryParams": {
+            "status": "string",
+            "page": "number",
+            "limit": "number",
+            "sort_by": "string",
+            "sort_order": "string",
+            "search": "string",
+            "date_from": "string",
+            "date_to": "string",
+            "service_type": "string",
+            "min_amount": "number",
+            "max_amount": "number"
+          },
+          "response": {
+            "jobs": "array",
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "total_pages": "number",
+            "has_next": "boolean",
+            "has_prev": "boolean"
+          }
+        },
+        "updateStatus": {
+          "path": "/provider/jobs/{jobId}/status",
+          "method": "PATCH",
+          "body": {
+            "status": "string"
+          }
+        }
+      },
+      "profile": {
+        "get": {
+          "path": "/provider/profile",
+          "method": "GET",
+          "response": {
+            "id": "string",
+            "name": "string",
+            "email": "string",
+            "phone": "string",
+            "services": "array",
+            "rating": "number",
+            "completedJobs": "number"
+          }
+        },
+        "update": {
+          "path": "/provider/profile",
+          "method": "PUT",
+          "body": {
+            "name": "string",
+            "phone": "string",
+            "services": "array"
+          }
+        }
+      },
+      "analytics": {
+        "get": {
+          "path": "/provider/analytics",
+          "method": "GET",
+          "queryParams": {
+            "period": "string",
+            "startDate": "string",
+            "endDate": "string"
+          },
+          "response": {
+            "bookings": {
+              "total": "number",
+              "byStatus": "object",
+              "trend": "array"
+            },
+            "revenue": {
+              "total": "number",
+              "byPeriod": "array",
+              "trend": "array"
+            },
+            "ratings": {
+              "average": "number",
+              "distribution": "object",
+              "trend": "array"
+            }
+          }
+        }
+      },
+      "reviews": {
+        "list": {
+          "path": "/provider/reviews",
+          "method": "GET",
+          "queryParams": {
+            "page": "number",
+            "limit": "number",
+            "sort_by": "string",
+            "sort_order": "string",
+            "rating": "number",
+            "date_from": "string",
+            "date_to": "string",
+            "has_response": "boolean"
+          },
+          "response": {
+            "reviews": "array",
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "total_pages": "number",
+            "has_next": "boolean",
+            "has_prev": "boolean"
+          }
+        },
+        "respond": {
+          "path": "/provider/reviews/{reviewId}/respond",
+          "method": "POST",
+          "body": {
+            "response": "string"
+          }
+        }
+      },
+      "earnings": {
+        "get": {
+          "path": "/provider/earnings",
+          "method": "GET",
+          "queryParams": {
+            "period": "string",
+            "startDate": "string",
+            "endDate": "string"
+          },
+          "response": {
+            "total_earnings": "number",
+            "pending_earnings": "number",
+            "earnings_trend": "number",
+            "recent_transactions": "array",
+            "monthly_earnings": "array",
+            "weekly_earnings": "array",
+            "service_earnings": "array"
+          }
+        },
+        "requestWithdrawal": {
+          "path": "/provider/earnings/withdraw",
+          "method": "POST",
+          "body": {
+            "amount": "number"
+          },
+          "response": {
+            "success": "boolean",
+            "amount": "number",
+            "status": "string",
+            "estimated_completion": "string"
+          }
+        },
+        "transactions": {
+          "path": "/provider/earnings/transactions",
+          "method": "GET",
+          "queryParams": {
+            "page": "number",
+            "limit": "number",
+            "sort_by": "string",
+            "sort_order": "string",
+            "type": "string",
+            "status": "string",
+            "date_from": "string",
+            "date_to": "string",
+            "min_amount": "number",
+            "max_amount": "number"
+          },
+          "response": {
+            "transactions": "array",
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "total_pages": "number",
+            "has_next": "boolean",
+            "has_prev": "boolean"
+          }
+        }
+      },
+      "notifications": {
+        "list": {
+          "path": "/provider/notifications",
+          "method": "GET",
+          "queryParams": {
+            "page": "number",
+            "limit": "number",
+            "type": "string",
+            "read": "boolean",
+            "date_from": "string",
+            "date_to": "string"
+          },
+          "response": {
+            "notifications": "array",
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "total_pages": "number",
+            "has_next": "boolean",
+            "has_prev": "boolean",
+            "unread_count": "number"
+          }
+        },
+        "markRead": {
+          "path": "/provider/notifications/{notificationId}/read",
+          "method": "PATCH"
+        },
+        "markAllRead": {
+          "path": "/provider/notifications/read-all",
+          "method": "PATCH"
+        },
+        "preferences": {
+          "path": "/provider/notifications/preferences",
+          "method": "GET",
+          "response": {
+            "email": {
+              "new_job": "boolean",
+              "job_status": "boolean",
+              "review": "boolean",
+              "payment": "boolean"
+            },
+            "push": {
+              "new_job": "boolean",
+              "job_status": "boolean",
+              "review": "boolean",
+              "payment": "boolean"
+            }
+          }
+        },
+        "updatePreferences": {
+          "path": "/provider/notifications/preferences",
+          "method": "PUT",
+          "body": {
+            "email": {
+              "new_job": "boolean",
+              "job_status": "boolean",
+              "review": "boolean",
+              "payment": "boolean"
+            },
+            "push": {
+              "new_job": "boolean",
+              "job_status": "boolean",
+              "review": "boolean",
+              "payment": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "notifications": {
+      "get": {
+        "path": "/notifications",
+        "method": "GET",
+        "query_params": {
+          "page": "number",
+          "limit": "number"
+        },
+        "response": {
+          "notifications": [
+            {
+              "id": "string",
+              "type": "string",
+              "title": "string",
+              "message": "string",
+              "created_at": "string",
+              "read": "boolean"
+            }
+          ],
+          "unread_count": "number",
+          "total": "number",
+          "page": "number",
+          "total_pages": "number"
+        }
+      },
+      "markAsRead": {
+        "path": "/notifications/{notificationId}/read",
+        "method": "POST",
+        "path_params": {
+          "notificationId": "string"
+        },
+        "response": {
+          "success": "boolean"
+        }
+      },
+      "markAllAsRead": {
+        "path": "/notifications/read-all",
+        "method": "POST",
+        "response": {
+          "success": "boolean"
+        }
+      }
+    }
+  }
+} 

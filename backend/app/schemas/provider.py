@@ -1,49 +1,36 @@
-from pydantic import BaseModel, EmailStr, constr
-from typing import List, Optional, Dict
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List
 from datetime import datetime
 
-class AvailabilitySchedule(BaseModel):
-    day: str
-    available: bool
-    hours: Optional[str] = None
-
 class ProviderBase(BaseModel):
-    name: str
-    email: EmailStr
-    phone: Optional[str] = None
+    business_name: str
+    business_description: Optional[str] = None
+    service_category: str
+    years_of_experience: Optional[float] = None
+    hourly_rate: Optional[float] = None
+    availability: Optional[str] = None  # JSON string of availability schedule
     location: Optional[str] = None
-    category: str
-    bio: Optional[str] = None
-    base_rate: float
-    services: List[str]
-    availability: List[AvailabilitySchedule]
 
 class ProviderCreate(ProviderBase):
-    user_id: int
+    pass
 
-class ProviderUpdate(BaseModel):
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    location: Optional[str] = None
-    bio: Optional[str] = None
-    base_rate: Optional[float] = None
-    services: Optional[List[str]] = None
-    availability: Optional[List[AvailabilitySchedule]] = None
-    photo_url: Optional[str] = None
+class ProviderUpdate(ProviderBase):
+    business_name: Optional[str] = None
+    service_category: Optional[str] = None
 
-class ProviderInDB(ProviderBase):
-    id: int
-    user_id: int
-    photo_url: Optional[str]
+class ProviderResponse(ProviderBase):
+    id: str
+    user_id: str
+    is_verified: bool
     rating: float
     total_reviews: int
-    is_verified: bool
-    is_active: bool
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
 
-class ProviderResponse(ProviderInDB):
-    pass 
+class ProviderProfile(ProviderResponse):
+    user: dict  # Will contain user information
+    jobs: List[dict]  # Will contain provider's jobs
+    reviews: List[dict]  # Will contain provider's reviews 
