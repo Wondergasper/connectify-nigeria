@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
@@ -7,11 +7,18 @@ class Payment(Base):
     __tablename__ = "payments"
 
     id = Column(String, primary_key=True, index=True)
-    job_id = Column(String, ForeignKey("jobs.id"), nullable=False)
     amount = Column(Float, nullable=False)
-    status = Column(String, default="pending")
+    currency = Column(String, nullable=False, default="NGN")
+    status = Column(String, nullable=False, default="pending")
+    payment_method = Column(String, nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    
+    # Relationships
+    user = relationship("User", back_populates="payments")
+    
+    # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
-    job = relationship("Job", back_populates="payments")
+    def __repr__(self):
+        return f"<Payment {self.id} - {self.amount} {self.currency}>"

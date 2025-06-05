@@ -25,9 +25,17 @@ alembic
 redis
 python-dotenv
 
+# --- Security ---
+slowapi
+python-multipart
+bcrypt
+cryptography
+
 # --- Utilities ---
 Pillow
 stripe
+python-dateutil
+requests
 
 # --- Testing & Linting ---
 pytest
@@ -37,7 +45,6 @@ flake8
 isort
 mypy
 
-# --- Additional packages ---
-python-multipart
-psycopg2-binary
-reportlab
+# --- Documentation ---
+mkdocs
+mkdocs-material

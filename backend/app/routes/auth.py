@@ -2,6 +2,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User
@@ -10,9 +11,13 @@ from app.auth.auth import create_access_token, get_current_active_user
 from app.services.user_service import UserService
 from app.config import settings
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
-@router.post("/register", response_model=UserResponse)
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@router.post("/auth/register", response_model=UserResponse)
 async def register(
     user_data: UserCreate,
     db: Session = Depends(get_db)
@@ -20,13 +25,13 @@ async def register(
     user_service = UserService(db)
     return user_service.create_user(user_data)
 
-@router.post("/token", response_model=Token)
+@router.post("/auth/token", response_model=Token)
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    login_data: LoginRequest,
     db: Session = Depends(get_db)
 ):
     user_service = UserService(db)
-    user = user_service.authenticate_user(form_data.username, form_data.password)
+    user = user_service.authenticate_user(login_data.email, login_data.password)
     
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -36,17 +41,17 @@ async def login(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/users/me", response_model=UserResponse)
 async def read_users_me(
     current_user: User = Depends(get_current_active_user)
 ):
     return current_user
 
-@router.post("/logout")
+@router.post("/auth/logout")
 async def logout():
     return {"message": "Successfully logged out"}
 
-@router.post("/verify-email")
+@router.post("/auth/verify-email")
 async def verify_email(
     token: str,
     db: Session = Depends(get_db)
@@ -54,7 +59,7 @@ async def verify_email(
     # TODO: Implement email verification logic
     pass
 
-@router.post("/forgot-password")
+@router.post("/auth/forgot-password")
 async def forgot_password(
     email: str,
     db: Session = Depends(get_db)
@@ -62,7 +67,7 @@ async def forgot_password(
     # TODO: Implement forgot password logic
     pass
 
-@router.post("/reset-password")
+@router.post("/auth/reset-password")
 async def reset_password(
     token: str,
     new_password: str,

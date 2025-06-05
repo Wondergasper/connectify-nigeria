@@ -29,6 +29,7 @@ class Job(Base):
     # Relationships
     provider = relationship("Provider", back_populates="jobs")
     customer = relationship("User", back_populates="jobs")
+    reviews = relationship("Review", back_populates="job", cascade="all, delete-orphan")
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)

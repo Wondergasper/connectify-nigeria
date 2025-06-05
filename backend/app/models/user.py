@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
 from uuid import uuid4
+from app.utils.password import get_password_hash, verify_password
 
 class UserRole(str, enum.Enum):
     USER = "user"
@@ -27,17 +28,18 @@ class User(Base):
     # Relationships
     jobs = relationship("Job", back_populates="customer")
     reviews = relationship("Review", back_populates="customer")
-    provider_profile = relationship("Provider", back_populates="user", uselist=False)
+    provider = relationship("Provider", back_populates="user", uselist=False)
+    payments = relationship("Payment", back_populates="user")
+    customer_bookings = relationship("Booking", foreign_keys="[Booking.customer_id]", back_populates="customer")
+    notifications = relationship("Notification", back_populates="user")
 
     def __repr__(self):
         return f"<User {self.email}>"
 
-    def set_password(self, password):
-        from app.auth.auth import get_password_hash
+    def set_password(self, password: str) -> None:
         self.hashed_password = get_password_hash(password)
 
-    def check_password(self, password):
-        from app.auth.auth import verify_password
+    def check_password(self, password: str) -> bool:
         return verify_password(password, self.hashed_password)
 
     def to_dict(self):
@@ -52,14 +54,6 @@ class User(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
-
-    @classmethod
-    def find_by_email(cls, email):
-        return cls.query.filter_by(email=email).first()
-
-    @classmethod
-    def find_by_id(cls, user_id):
-        return cls.query.get(user_id)
 
     def update_last_login(self):
         self.last_login = datetime.utcnow()

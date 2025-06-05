@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.user import User, UserRole
 from app.schemas.user import UserCreate, UserUpdate
-from app.auth.auth import get_password_hash, verify_password
+from app.utils.password import get_password_hash, verify_password
 
 class UserService:
     def __init__(self, db: Session):
@@ -73,12 +73,26 @@ class UserService:
 
     def authenticate_user(self, email: str, password: str) -> User:
         user = self.get_user_by_email(email)
-        if not user or not user.check_password(password):
+        if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        
+        if not user.check_password(password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Inactive user"
+            )
+            
         return user
 
     def verify_user(self, user_id: str) -> User:
